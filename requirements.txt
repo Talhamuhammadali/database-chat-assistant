@@ -12,4 +12,4 @@ bitsandbytes==0.43.1
 pydantic==2.7.1
 python-decouple
 psycopg2-binary==2.9.9
-# psycopg2==2.9.9
+gunicorn
