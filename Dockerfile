@@ -8,11 +8,8 @@ RUN pip --no-cache-dir install -r requirements.txt
 COPY .env /.env
 # Set work Directory
 WORKDIR /app
-# Install vllm and gunicorn
-RUN pip install vllm gunicorn
 # Copy app
 COPY . /app
-
 # Port for communication
 EXPOSE 8080
 # Command to runthe FastAPI application using gunicorn app.main:app --reload

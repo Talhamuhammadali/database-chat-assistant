@@ -1,6 +1,6 @@
 fastapi==0.110.3
 uvicorn==0.29.0
-torch==2.3.0
+torch==2.2.1
 transformers
 accelerate
 langchain==0.1.17
