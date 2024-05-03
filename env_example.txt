@@ -1,0 +1,7 @@
+# postgres Credentials
+
+POSTGRES_DATABASE="fsma"
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="ticker1234"
+POSTGRES_HOST=""
+POSTGRES_PORT="5432"

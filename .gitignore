@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+app/llm_models
 develop-eggs/
 dist/
 downloads/
