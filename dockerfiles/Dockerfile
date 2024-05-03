@@ -16,5 +16,5 @@ COPY . ./.env
 # Port for communication
 EXPOSE 8080
 # Command to runthe FastAPI application using gunicorn app.main:app --reload
-CMD [ "gunicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080" ]
+CMD [ "gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker","app.main:app", "--host", "0.0.0.0", "--port", "8080" ]
 

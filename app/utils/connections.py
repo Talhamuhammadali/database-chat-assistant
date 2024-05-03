@@ -10,27 +10,28 @@ from app.utils.settings import (
     POSTGRES_PASSWORD,
     POSTGRES_PORT
 )
-# postgres_dsn = str(PostgresDsn.build(
-#     scheme="postgresql",
-#     username=POSTGRES_USER,
-#     password=POSTGRES_PASSWORD,
-#     host=POSTGRES_HOST,
-#     port=POSTGRES_PORT,
-#     path=POSTGRES_DATABASE,
-# ))
-# print(postgres_dsn)
-# engine = create_engine(postgres_dsn, pool_pre_ping=True)
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-db = psycopg2.connect(
-    user="ummar",
-    password="ticker1234",
-    host="",
-    port="5432",
-    database="speech-to-text"
-)
+postgres_dsn = str(PostgresDsn.build(
+    scheme="postgresql",
+    username=POSTGRES_USER,
+    password=POSTGRES_PASSWORD,
+    host=POSTGRES_HOST,
+    port=POSTGRES_PORT,
+    path=POSTGRES_DATABASE,
+))
+print(postgres_dsn)
+engine = create_engine(postgres_dsn, pool_pre_ping=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# db = psycopg2.connect(
+#     user="ummar",
+#     password="ticker1234",
+#     host="",
+#     port="5432",
+#     database="speech-to-text"
+# )
 
 def get_db():
     try:
+        db = SessionLocal()
         yield db
     finally:
         db.close()
