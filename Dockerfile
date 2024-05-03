@@ -1,17 +1,17 @@
 # Set up python
 FROM python:3.10.12
+# Upadating pip
+RUN pip install --upgrade pip
+# Copy requirements  to docker
+COPY requirements.txt /requirements.txt
+RUN pip --no-cache-dir install -r requirements.txt
+COPY .env /.env
 # Set work Directory
 WORKDIR /app
 # Install vllm and gunicorn
 RUN pip install vllm gunicorn
-# Copy requirements  to docker
-COPY . ./requirements.txt 
-# Install requirements in container
-RUN pip install -r requirements.txt
 # Copy app
-COPY . .
-# copy envirnmoment credentials 
-COPY . ./.env
+COPY . /app
 
 # Port for communication
 EXPOSE 8080
