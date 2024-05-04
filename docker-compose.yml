@@ -1,13 +1,20 @@
-version: '3.8'  # Or a suitable version for your setup
+version: '1.0'  # Or a suitable version for your setup
 
 services:
   data-chat-assistant:
-    image: data-chat-assistant  # Replace with your image name
+    container_name: assistant-server
+    platform: linux/amd64
+    image: database-chat-assistant  # Replace with your image name
     build: .  # Assuming your Dockerfile is in the same directory
     ports:
       - "8080:8080"
+    env_file:
+      - .env
+    command: "uvicorn app.main:app --reload  --reload-delay 1 --log-level debug --reload-dir app/ --host 0.0.0.0 --port 8080"
     volumes:
-      - model-data:app/llm_models  # Mapping container data to a local directory
+    - .:/app
+#     volumes:
+#       - model-data:app/llm_models  # Mapping container data to a local directory
 
-volumes:
-  model-data: # Named volume to persist VLLM models
+# volumes:
+#   model-data: # Named volume to persist VLLM models

@@ -5,7 +5,7 @@ transformers
 accelerate
 langchain==0.1.17
 langchain-community==0.0.36
-vllm==0.4.1
+# vllm==0.4.1
 numpy==1.24
 datasets
 huggingface-cli
