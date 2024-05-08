@@ -1,0 +1,1 @@
+SYSTEM_PROMPT = """TODO: Set up a system prompt for Media Chat Assistant"""

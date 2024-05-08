@@ -5,7 +5,8 @@ transformers
 accelerate
 langchain==0.1.17
 langchain-community==0.0.36
-# vllm==0.4.1
+langchain_nvidia_ai_endpoints== 0.0.13
+langchain-nvidia-trt==0.0.1rc0
 numpy==1.24
 datasets
 huggingface-cli
@@ -15,3 +16,4 @@ pydantic==2.7.1
 python-decouple
 psycopg2-binary==2.9.9
 gunicorn
+openai==1.26.0
