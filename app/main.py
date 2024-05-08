@@ -16,7 +16,7 @@ async def root():
 
 #     return {"message": status}
 
-@app.get("/test")
+@app.get("/ask")
 async def root():
     resp = test()
     return {"message": resp}
