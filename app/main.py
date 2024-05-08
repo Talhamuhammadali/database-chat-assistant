@@ -10,11 +10,6 @@ app = FastAPI(
 async def root():
     return {"message": "Hello World"}
 
-# @app.get("/connect_db")
-# async def root():
-#     status = check_database_connection()
-
-#     return {"message": status}
 
 @app.get("/ask")
 async def root():
