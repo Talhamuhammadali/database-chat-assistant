@@ -8,6 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+launch.json
 build/
 app/llm_models
 develop-eggs/
