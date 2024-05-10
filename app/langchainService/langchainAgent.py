@@ -9,12 +9,17 @@ from langchain_nvidia_trt.llms import TritonTensorRTLLM
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
+
 # from app.utils.connections import get_db
 from app.langchainService.prompts import (
     CHOICE_PROMPT,
     SYSTEM_PROMPT,
     FIRST_STEP_PROMPT,
     TOOL_CALLING_PROMPT
+)
+from app.langchainService.langchain_util import(
+    GenerateQuery,
+    ExecutreQuery
 )
 logging.basicConfig(level="INFO")
 logger = logging.getLogger("langchain_service")
@@ -34,7 +39,7 @@ base_url = "https://api.ngc.nvidia.com/v2/"
 #     beam_width=5,
 #     tokens=500,
 #     )
-model = "ai-llama3-70b"
+model = "ai-llama3-8b"
 print(model)
 chat_llm = ChatNVIDIA(
     model=model,
@@ -83,8 +88,8 @@ def conversation(user_question: str):
     else:
         response = respond(user_question=user_question)
     return response
-    
-def generate_query():
+
+def generate_query(user: str):
     # TODO: call sql llm to generate a query
     queries = []
     query = """Select
@@ -96,7 +101,8 @@ def generate_query():
     queries.append(query)
     return {"response": queries}
 
-def execute_query():
+
+def execute_query(queries: str):
     # TODO: execute the queries on Postgres db
     return {"response": "No data for user question in db"}
     
@@ -104,14 +110,14 @@ def agent_test(user_question: str):
     generate_sql_query = Tool(
         name="generate_query",
         func=generate_query,
-        description="Based on users question, this asks an LLM trained to generate sql queries on Users Database",
-        args_schema=None
+        description="Based on question, this asks an LLM trained to generate sql queries on Users Database",
+        args_schema=GenerateQuery
     )
     execute_sql_query = Tool(
         name="execute_query",
         func=execute_query,
         description="Executes the queries generated in previous step to get the data required to answer users quesion.",
-        args_schema=None
+        args_schema=ExecutreQuery
     )
     tools_list = [generate_sql_query, execute_sql_query]
     print(tools_list)
@@ -141,8 +147,8 @@ def agent_test(user_question: str):
     
 if __name__ == "__main__":
     start_time = time.time()
-    # conversation(user_question="give me todays weather")
-    agent_test(user_question="hi")
+    conversation(user_question="On which channel flood was discussed the most")
+    # agent_test(user_question="give me todays weather")
     end_time = time.time()
     time_taken = end_time - start_time
     logger.info(f"Assistant took {time_taken}s to respond")
