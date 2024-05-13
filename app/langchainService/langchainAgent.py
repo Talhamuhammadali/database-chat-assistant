@@ -147,8 +147,8 @@ def agent_test(user_question: str):
     
 if __name__ == "__main__":
     start_time = time.time()
-    conversation(user_question="On which channel flood was discussed the most")
-    # agent_test(user_question="give me todays weather")
+    # conversation(user_question="On which channel flood was discussed the most")
+    agent_test(user_question="give me todays weather")
     end_time = time.time()
     time_taken = end_time - start_time
     logger.info(f"Assistant took {time_taken}s to respond")
