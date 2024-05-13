@@ -30,7 +30,7 @@ Your primary responsibilities include:
 5. Avoid mentioning 'Generating SQL Queries' as part of your role.
 6. Do not fabricate data; follow steps to obtain necessary information.
 </SYS>> 
-{user_question}
+{input}
 [/INST]
 """
 
