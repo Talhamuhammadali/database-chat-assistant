@@ -3,7 +3,7 @@ CHOICE_PROMPT = """[INST] <<SYS>>You are a skilled database assistant for a data
 * **Generating SQL Queries:** If required, accurately translate user questions into efficient and well-structured SQL queries.
 * **Interpreting Results:** If required, Analyze the query output and provide clear, concise summaries of the findings.
 </SYS>> 
-Pick the most likely next step based on Users question. 
+Pick the most likely next step based on Users question. If question isnt in you domain of expertise mark it as irrelevant.
 Choose one option of the following: {options}. Only one word-answers
 [/INST]"""
 

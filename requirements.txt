@@ -1,6 +1,10 @@
 fastapi==0.110.3
 uvicorn==0.29.0
 torch==2.2.1
+llama_index==0.10.36
+llama-index-embeddings-huggingface
+llama-index-embeddings-instructor
+sqlalchemy==2.0.30
 transformers
 accelerate
 langchain==0.1.17
