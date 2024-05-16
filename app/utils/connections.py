@@ -9,48 +9,28 @@ from app.utils.settings import (
     POSTGRES_DATABASE,
     POSTGRES_USER,
     POSTGRES_PASSWORD,
-    POSTGRES_PORT
+    POSTGRES_PORT,
 )
-postgres_dsn = str(PostgresDsn.build(
-    scheme="postgresql",
-    username=POSTGRES_USER,
-    password=POSTGRES_PASSWORD,
-    host=POSTGRES_HOST,
-    port=POSTGRES_PORT,
-    path=POSTGRES_DATABASE,
-))
-print(postgres_dsn)
-engine = create_engine(postgres_dsn, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-# db = psycopg2.connect(
-#     user="ummar",
-#     password="ticker1234",
-#     host="",
-#     port="5432",
-#     database="speech-to-text"
-# )
+from app.utils.settings import (
+    MYSQL_USER,
+    MYSQL_PASS,
+    MYSQL_HOST,
+    MYSQL_PORT,
+    MYSQL_DB,
+)
 
-def get_db():
-    try:
-        db = SessionLocal()
-        yield db
-    finally:
-        db.close()
-
-
-def check_database_connection():
-    try:
-        session = next(get_db())
-        query_result = session.execute(text("SELECT schema_name FROM information_schema.schemata;"))
-        schemas = [row[0] for row in query_result.fetchall()]
-        print("Connected to database. Available schemas:", schemas)
-        return True
-    except Exception as e:
-        print("Error connecting to database:", e)
-        return False
-    
 def chromadb_connection(collection: str):
     db = chromadb.PersistentClient("./chromadb")
     chroma_collection = db.get_or_create_collection(collection)
     return chroma_collection
-    
+
+def mysql_connection():
+    connection_string = f"mysql://{MYSQL_USER}:{MYSQL_PASS}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
+    engine = create_engine(connection_string)
+    return engine
+
+def sqlite_connection():
+    # connection_string = f"mysql://{SQLITE_USER}:{SQLITE_PASS}@{SQLITE_HOST}:{SQLITE_PORT}/{SQLITE_DB}"
+    # engine = create_engine(connection_string, future=True)
+    engine = create_engine("sqlite:///mydatabase.db", future=True)
+    return engine 

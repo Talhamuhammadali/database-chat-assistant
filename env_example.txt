@@ -1,7 +1,18 @@
-# postgres Credentials
-
+# Postgres Credentials
 POSTGRES_DATABASE="fsma"
 POSTGRES_USER="postgres"
 POSTGRES_PASSWORD="ticker1234"
 POSTGRES_HOST=""
 POSTGRES_PORT="5432"
+# llm server_urls
+SQL_URL=""
+CHAT_URL=""
+# phenoix server ip
+PHENOIX="http://123.456.789:6006"
+
+# MYSQL Credentials
+MYSQL_USER="talha_dev"
+MYSQL_PASS="Forbmax@1234"
+MYSQL_HOST="192.168.18.144"
+MYSQL_PORT=3306
+MYSQL_DB="redmine"
