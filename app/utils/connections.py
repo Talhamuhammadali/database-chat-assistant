@@ -1,3 +1,4 @@
+import chromadb
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
@@ -47,3 +48,9 @@ def check_database_connection():
     except Exception as e:
         print("Error connecting to database:", e)
         return False
+    
+def chromadb_connection(collection: str):
+    db = chromadb.PersistentClient("./chromadb")
+    chroma_collection = db.get_or_create_collection(collection)
+    return chroma_collection
+    
