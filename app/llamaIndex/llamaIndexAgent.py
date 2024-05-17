@@ -75,15 +75,17 @@ if __name__ == "__main__":
     # response = chat_llm.complete("hi")
     # print(response)
     engine = mysql_connection()
-    metadata_obj = MetaData().reflect(engine)
-    table = metadata_obj.tables["users",
-        "issues", 
-        "issue_statuses",
+    metadata_obj = MetaData()
+    tables = ["users",
+        # "issues", 
+        # "issue_statuses",
         "projects", 
-        "project_track",
-        "enumerations",
-        "trackers" 
+        # "projects_trackers",
+        # "enumerations",
+        # "trackers" 
     ]
+    metadata_obj.reflect(bind=engine, only=tables)
+    
     db_retriever, sql_database = set_up_database_retriever(
         engine=engine,
         metadata_obj=metadata_obj,
@@ -97,7 +99,7 @@ if __name__ == "__main__":
         llm=chat_llm
         
     )
-    response = query_engine.query("which contry has the most populated city and its name")
+    response = query_engine.query("what are the last 5 projects being worked on.")
     time_taken = time.time() - start_time
     print(f"time taken to respond:{time_taken}s")
     print(response)

@@ -1,5 +1,4 @@
 fastapi==0.110.3
-
 uvicorn==0.29.0
 torch==2.2.1
 # arize-phoenix==4.0.3
@@ -9,6 +8,7 @@ llama-index-embeddings-instructor
 llama-index-llms-nvidia-triton
 llama-index-vector-stores-chroma==0.1.8
 sqlalchemy==2.0.30
+pymysql==1.1.0
 transformers
 accelerate
 langchain==0.1.17

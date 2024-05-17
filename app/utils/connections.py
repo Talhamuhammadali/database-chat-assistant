@@ -1,4 +1,6 @@
 import chromadb
+from mysql import connector
+from urllib.parse import quote_plus, quote
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
@@ -25,8 +27,12 @@ def chromadb_connection(collection: str):
     return chroma_collection
 
 def mysql_connection():
-    connection_string = f"mysql://{MYSQL_USER}:{MYSQL_PASS}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
-    engine = create_engine(connection_string)
+    pws = quote_plus(MYSQL_PASS)
+    connection_string = f"mysql+pymysql://{MYSQL_USER}:%s@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"%quote_plus(MYSQL_PASS)
+    print(connection_string)
+    engine = create_engine(url=connection_string)
+    
+    connection = engine.connect()   
     return engine
 
 def sqlite_connection():
@@ -34,3 +40,5 @@ def sqlite_connection():
     # engine = create_engine(connection_string, future=True)
     engine = create_engine("sqlite:///mydatabase.db", future=True)
     return engine 
+
+check = mysql_connection()
