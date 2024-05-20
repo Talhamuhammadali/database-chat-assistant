@@ -99,7 +99,9 @@ def ask(query: str):
     query_engine = SQLTableRetrieverQueryEngine(
         sql_database=sql_database,
         table_retriever=db_retriever,
-        llm=chat_llm   
+        llm=chat_llm,
+        sql_only=True,
+        synthesize_response=False
     )
     response = query_engine.query(query)
     time_taken = time.time() - start_time
