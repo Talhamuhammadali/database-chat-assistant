@@ -44,13 +44,12 @@ def llms_clients():
     temperature=0.5
     )
     sql_llm = ""
-    embediing_model = HuggingFaceEmbedding(model_name='thenlper/gte-base')
+    embediing_model = HuggingFaceEmbedding(model_name='all-MiniLM-L6-v2')
     Settings.embed_model=embediing_model
     return chat_llm, sql_llm
 
-def set_up_database_retriever(engine, metadata_obj: MetaData, top_k: int):
+def set_up_database_retriever(sql_database: SQLDatabase, metadata_obj: MetaData, top_k: int):
     # creating a vector store
-    sql_database = SQLDatabase(engine)
     chroma_collection = chromadb_connection(collection="sql_tables")
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
@@ -67,40 +66,43 @@ def set_up_database_retriever(engine, metadata_obj: MetaData, top_k: int):
     )
     db_retriever = db_index.as_retriever(similarity_top_k=top_k)
     
-    return db_retriever, sql_database
-    
+    return db_retriever
 
-if __name__ == "__main__":
+
+def ask(query: str):
     chat_llm, _ = llms_clients()
     # response = chat_llm.complete("hi")
     # print(response)
     engine = mysql_connection()
     metadata_obj = MetaData()
-    tables = ["users",
-        # "issues", 
-        # "issue_statuses",
+    sql_database = SQLDatabase(engine)
+    tables = [
+        "users",
+        "issues", 
+        "issue_statuses",
         "projects", 
-        # "projects_trackers",
-        # "enumerations",
-        # "trackers" 
+        "projects_trackers",
+        "enumerations",
+        "trackers" 
     ]
     metadata_obj.reflect(bind=engine, only=tables)
-    
-    db_retriever, sql_database = set_up_database_retriever(
-        engine=engine,
+    start_time = time.time()
+    db_retriever = set_up_database_retriever(
+        sql_database=sql_database,
         metadata_obj=metadata_obj,
         top_k=3
     )
+    time_taken = time.time() - start_time
+    print(f"time taken to process db tables:{time_taken}s")
     start_time = time.time()
     # replace chat_llm with sql query llm to get better 
     query_engine = SQLTableRetrieverQueryEngine(
         sql_database=sql_database,
         table_retriever=db_retriever,
-        llm=chat_llm
-        
+        llm=chat_llm   
     )
-    response = query_engine.query("what are the last 5 projects being worked on.")
+    response = query_engine.query(query)
     time_taken = time.time() - start_time
     print(f"time taken to respond:{time_taken}s")
-    print(response)
-    print(response.metadata)
+    return response
+    # print(response.metadata)

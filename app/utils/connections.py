@@ -1,5 +1,4 @@
 import chromadb
-from mysql import connector
 from urllib.parse import quote_plus, quote
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
