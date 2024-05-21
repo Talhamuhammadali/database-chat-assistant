@@ -1,5 +1,11 @@
 import time
+import phoenix as px
 from pprint import pprint
+from phoenix.trace import SpanEvaluations
+from phoenix.session.evaluation import (
+    get_qa_with_reference,
+    get_retrieved_documents
+)
 from llama_index.core.prompts.default_prompts import DEFAULT_TEXT_TO_SQL_PROMPT
 from llama_index.core.llms import ChatResponse
 from llama_index.core import (
@@ -8,7 +14,8 @@ from llama_index.core import (
     SQLDatabase,
     VectorStoreIndex,
     SimpleDirectoryReader,
-    StorageContext
+    StorageContext,
+    set_global_handler
 )
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core.query_engine import NLSQLTableQueryEngine, SQLTableRetrieverQueryEngine
@@ -32,10 +39,14 @@ from llama_index.core.objects import (
 from sqlalchemy import (
     MetaData
 )
+from app.llamaIndex.eval_query import evaluation
 from app.utils.connections import (
     chromadb_connection,
     mysql_connection
 )
+px.launch_app()
+set_global_handler("arize_phoenix")
+
 
 def llms_clients():
     api_key="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"
@@ -100,11 +111,17 @@ def ask(query: str):
         sql_database=sql_database,
         table_retriever=db_retriever,
         llm=chat_llm,
-        sql_only=True,
-        synthesize_response=False
+        synthesize_response=True
     )
     response = query_engine.query(query)
     time_taken = time.time() - start_time
     print(f"time taken to respond:{time_taken}s")
+    df = get_qa_with_reference(px.active_session()) 
+    # hallucination_eval, qa_correctness_eval = evaluation(queries_df=df, llm=chat_llm)
+    # px.Client().log_evaluations(
+    #     SpanEvaluations(eval_name="Hallucination", dataframe=hallucination_eval),
+    #     SpanEvaluations(eval_name="QA Correctness", dataframe=qa_correctness_eval),
+    # )
+    print(f"Check traces here:{px.active_session().url}")
     return response
     # print(response.metadata)

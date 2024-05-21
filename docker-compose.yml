@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   data-chat-assistant:
     container_name: assistant-server
