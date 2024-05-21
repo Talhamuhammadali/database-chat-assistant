@@ -1,29 +1,35 @@
-# Use a base image with Python
-FROM python:3.10.12
+# Use the specified base image
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11
 
-# Set up python
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3-pip \
-    && rm -rf /var/lib/apt/lists/*
+# Set timezone
+ENV TZ="UTC"
 
-# Upadating pip
-RUN pip3 install --upgrade pip
+# Set work Directory
+WORKDIR /app/
 
-# Copy requirements to docker
-COPY requirements.txt /requirements.txt
-RUN pip3 --no-cache-dir install -r /requirements.txt
+# Install Poetry
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python && \
+    cd /usr/local/bin && \
+    ln -s /opt/poetry/bin/poetry && \
+    poetry config virtualenvs.create false
+
+# Copy pyproject.toml and poetry.lock to docker
+COPY ./pyproject.toml ./poetry.lock* /app/
+
+# Install only main dependencies
+RUN poetry install --no-root --no-dev
+
+# Copy the rest of the application files
+COPY . /app
 
 # Copy .env file
 COPY .env /app/.env
 
-# Set work Directory
-WORKDIR /app
-
-# Copy the rest of the application files
-COPY . /app
+# Set Python path
+ENV PYTHONPATH=/app
 
 # Expose port for communication
 EXPOSE 8080
 
 # Command to run the FastAPI application using uvicorn
-CMD ["gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]

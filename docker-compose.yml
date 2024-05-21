@@ -1,15 +1,15 @@
-version: '1.0'  # Or a suitable version for your setup
+version: '3.8'
 
 services:
   data-chat-assistant:
     container_name: assistant-server
-    platform: linux/amd64
-    image: database-chat-assistant  
-    build: . 
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     env_file:
       - .env
-    command: "uvicorn app.main:app --reload  --reload-delay 1 --log-level debug --reload-dir app/ --host 0.0.0.0 --port 8080"
+    command: "poetry run uvicorn app.main:app --reload --reload-delay 1 --log-level debug --reload-dir app/ --host 0.0.0.0 --port 8080"
     volumes:
-    - .:/app
+      - .:/app
