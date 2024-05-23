@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "database-chat-assistant-1"
+name = "database-chat-assistant"
 version = "0.1.0"
 description = ""
 authors = ["Talhamuhammadali <talha_muhammadali@hotmail.com>"]
