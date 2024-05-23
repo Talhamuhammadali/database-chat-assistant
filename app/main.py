@@ -18,5 +18,4 @@ async def root():
 async def ask_llama(request: userInput):
     # question = "what are the not public projects being worked on in our company this month.Donot provide details other the what is retrieved from db. Today: 17-05-2024"
     response = ask(query=request.question)
-    print(type(response))
     return {"message": response.response}

@@ -1,4 +1,4 @@
-examples = [
+EXAMPLES = [
     {
         "question": "What is my name",
         "query": "Talha"
@@ -17,9 +17,11 @@ examples = [
     },
 ]
 
-redmine_tables = {
+REDMINE_TABLES = {
     "projects": {
-        "description": "Stores information about projects in Redmine.",
+        "description": """This table stores information about each project in Redmine.
+Each project has a unique identifier (id) and fields for attributes such as the project name,
+description, identifier (a short name used in URLs), parent project (if any), and more.""",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each project."},
             {"name": "name", "description": "Name of the project."},
@@ -28,7 +30,8 @@ redmine_tables = {
         ]
     },
     "issues": {
-        "description": "Contains details about individual tasks, bugs, or features within projects.",
+        "description": """The issues table is where information about individual tasks, bugs, or features (referred to as issues) is stored. Each issue has a unique identifier (id) and fields for attributes such as the project it belongs to (project_id),
+the issue's subject, description, status, priority, assigned user (assigned_to_id), and more.""",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each issue."},
             {"name": "project_id", "description": "ID of the project the issue belongs to."},
@@ -92,7 +95,7 @@ redmine_tables = {
         ]
     },
     "time_entries": {
-        "description": "Records time entries for work done on issues.",
+        "description": "Records time entries for work done on issues by users.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each time entry."},
             {"name": "user_id", "description": "ID of the user who logged the time entry."},
