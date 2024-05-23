@@ -17,9 +17,8 @@ examples = [
     },
 ]
 
-redmine_tables = [
-    {
-        "table_name": "projects",
+redmine_tables = {
+    "projects": {
         "description": "Stores information about projects in Redmine.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each project."},
@@ -28,8 +27,7 @@ redmine_tables = [
             {"name": "identifier", "description": "Short name used in URLs for the project."}
         ]
     },
-    {
-        "table_name": "issues",
+    "issues": {
         "description": "Contains details about individual tasks, bugs, or features within projects.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each issue."},
@@ -40,8 +38,7 @@ redmine_tables = [
             {"name": "assigned_to_id", "description": "ID of the user assigned to the issue."}
         ]
     },
-    {
-        "table_name": "users",
+    "users": {
         "description": "Stores information about users in Redmine.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each user."},
@@ -51,8 +48,7 @@ redmine_tables = [
             {"name": "lastname", "description": "User's last name."}
         ]
     },
-    {
-        "table_name": "roles",
+    "roles": {
         "description": "Defines roles with specific permissions that can be assigned to users within projects.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each role."},
@@ -61,8 +57,7 @@ redmine_tables = [
             {"name": "assignable", "description": "Indicates if the role is assignable."}
         ]
     },
-    {
-        "table_name": "members",
+    "members": {
         "description": "Associates users with projects and roles by storing membership information.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each membership."},
@@ -71,8 +66,7 @@ redmine_tables = [
             {"name": "role_id", "description": "ID of the role within the project."}
         ]
     },
-    {
-        "table_name": "trackers",
+    "trackers": {
         "description": "Categorizes different types of issues in Redmine.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each tracker."},
@@ -80,8 +74,7 @@ redmine_tables = [
             {"name": "is_in_chlog", "description": "Indicates if the tracker should be shown in the changelog."}
         ]
     },
-    {
-        "table_name": "issue_statuses",
+    "issue_statuses": {
         "description": "Defines the possible statuses that issues can have.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each status."},
@@ -89,8 +82,7 @@ redmine_tables = [
             {"name": "is_closed", "description": "Indicates if the status represents a closed state."}
         ]
     },
-    {
-        "table_name": "custom_fields",
+    "custom_fields": {
         "description": "Stores information about custom fields that can be added to projects or issues.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each custom field."},
@@ -99,8 +91,7 @@ redmine_tables = [
             {"name": "is_required", "description": "Indicates if the custom field is required."}
         ]
     },
-    {
-        "table_name": "time_entries",
+    "time_entries": {
         "description": "Records time entries for work done on issues.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each time entry."},
@@ -112,8 +103,7 @@ redmine_tables = [
             {"name": "comments", "description": "Additional comments or description for the time entry."}
         ]
     },
-    {
-        "table_name": "attachments",
+    "attachments": {
         "description": "Stores file attachments associated with issues or other entities.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each attachment."},
@@ -124,8 +114,7 @@ redmine_tables = [
             {"name": "filesize", "description": "Size of the attached file."}
         ]
     },
-    {
-        "table_name": "enumerations",
+    "enumerations": {
         "description": "Contains various enumerations used throughout Redmine.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each enumeration."},
@@ -134,8 +123,7 @@ redmine_tables = [
             {"name": "is_default", "description": "Indicates if the enumeration is a default option."}
         ]
     },
-    {
-        "table_name": "member_roles",
+    "member_roles": {
         "description": "Associates roles with members within projects, defining the roles each member holds.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each member role."},
@@ -144,14 +132,12 @@ redmine_tables = [
             {"name": "inherited_from", "description": "Indicates if the role is inherited from a parent project."}
         ]
     },
-    {
-        "table_name": "projects_trackers",
+    "projects_trackers": {
         "description": "Defines which trackers are available for each project.",
         "important_columns": [
-            {"name": "id",
-            "description": "Unique identifier for each project-tracker association."},
+            {"name": "id", "description": "Unique identifier for each project-tracker association."},
             {"name": "project_id", "description": "ID of the project."},
             {"name": "tracker_id", "description": "ID of the tracker associated with the project."}
         ]
     }
-]
+}

@@ -44,6 +44,9 @@ from app.utils.connections import (
     chromadb_connection,
     mysql_connection
 )
+from app.llamaIndex.db_utils import redmine_tables
+
+
 px.launch_app()
 set_global_handler("arize_phoenix")
 
@@ -87,15 +90,8 @@ def ask(query: str):
     engine = mysql_connection()
     metadata_obj = MetaData()
     sql_database = SQLDatabase(engine)
-    tables = [
-        "users",
-        "issues", 
-        "issue_statuses",
-        "projects", 
-        "projects_trackers",
-        "enumerations",
-        "trackers" 
-    ]
+    tables = [*redmine_tables.keys()]
+    print(tables)
     metadata_obj.reflect(bind=engine, only=tables)
     start_time = time.time()
     db_retriever = set_up_database_retriever(
