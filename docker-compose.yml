@@ -11,3 +11,8 @@ services:
     command: "poetry run uvicorn app.main:app --reload --reload-delay 1 --log-level debug --reload-dir app/ --host 0.0.0.0 --port 8080"
     volumes:
       - .:/app
+    networks:
+      - assistant-network
+networks:
+  assistant-network:
+    name: assistant-network

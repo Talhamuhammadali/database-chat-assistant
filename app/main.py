@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
-# from app.utils.connections import check_database_connection
 from app.llamaIndex.llamaIndexAgent import ask
+
 app = FastAPI(
     title="Assistant-api"
 )

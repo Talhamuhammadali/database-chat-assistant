@@ -1,0 +1,6 @@
+examples = [
+    {
+        "question": "",
+        "query": ""
+     }
+]
