@@ -1,6 +1,7 @@
 import time
+import json
+import logging
 import phoenix as px
-from pprint import pprint
 from phoenix.trace import SpanEvaluations
 from phoenix.session.evaluation import (
     get_qa_with_reference,
@@ -44,8 +45,11 @@ from app.utils.connections import (
     chromadb_connection,
     mysql_connection
 )
-from app.llamaIndex.db_utils import redmine_tables
+from app.llamaIndex.db_utils import REDMINE_TABLES
 
+logging.basicConfig(level="INFO")
+logger = logging.getLogger("Redmine-Assitant")
+logger.setLevel(logging.INFO)
 
 px.launch_app()
 set_global_handler("arize_phoenix")
@@ -74,7 +78,10 @@ def set_up_database_retriever(sql_database: SQLDatabase, metadata_obj: MetaData,
     table_node_mapping = SQLTableNodeMapping(sql_database)
     table_schema_objs = []
     for table_name in metadata_obj.tables.keys():
-        table_schema_objs.append(SQLTableSchema(table_name=table_name))
+        table = SQLTableSchema(table_name=table_name)
+        table.context_str = REDMINE_TABLES[table_name]["description"]
+        table_schema_objs.append(table)
+        
     db_index = ObjectIndex.from_objects(
         table_schema_objs,
         table_node_mapping,
@@ -85,6 +92,15 @@ def set_up_database_retriever(sql_database: SQLDatabase, metadata_obj: MetaData,
     
     return db_retriever
 
+def get_context_string(table_data: List[SQLTableSchema]):
+    """Get table context string."""
+    context_strs = []
+    for table_schema_obj in table_data:
+        table_info = REDMINE_TABLES[table_schema_obj.table_name]
+        description = json.dumps(table_info)
+        context_str = f"Table and column description for table '{table_schema_obj.table_name}':\n {description}"  
+        context_strs.append(context_str)
+    return "\n\n".join(context_strs)
 
 def ask(query: str):
     chat_llm, _ = llms_clients()
@@ -93,8 +109,7 @@ def ask(query: str):
     engine = mysql_connection()
     metadata_obj = MetaData()
     sql_database = SQLDatabase(engine)
-    tables = [*redmine_tables.keys()]
-    print(tables)
+    tables = [*REDMINE_TABLES.keys()]
     metadata_obj.reflect(bind=engine, only=tables)
     start_time = time.time()
     db_retriever = set_up_database_retriever(
@@ -102,25 +117,54 @@ def ask(query: str):
         metadata_obj=metadata_obj,
         top_k=3
     )
-    time_taken = time.time() - start_time
-    print(f"time taken to process db tables:{time_taken}s")
-    start_time = time.time()
-    # replace chat_llm with sql query llm to get better 
-    query_engine = SQLTableRetrieverQueryEngine(
-        sql_database=sql_database,
-        table_retriever=db_retriever,
-        llm=chat_llm,
-        synthesize_response=True
+
+    table_parser_component = FnComponent(fn=get_context_string)
+    text2sql_prompt = DEFAULT_TEXT_TO_SQL_PROMPT.partial_format(
+    dialect=engine.dialect.name
     )
-    response = query_engine.query(query)
+    logger.info(text2sql_prompt)
+
     time_taken = time.time() - start_time
-    print(f"time taken to respond:{time_taken}s")
+    logger.info(f"time taken to process db tables:{time_taken}s")
+    start_time = time.time()
+    qp = QP(
+        modules={
+            "input": InputComponent(),
+            "table_retriever": db_retriever,
+            "table_output_parser": table_parser_component,
+            "text2sql_prompt": text2sql_prompt,
+            "text2sql_llm": chat_llm,
+            # "sql_output_parser": sql_parser_component,
+            # "sql_retriever": sql_retriever,
+            # "response_synthesis_prompt": response_synthesis_prompt,
+            # "response_synthesis_llm": llm,
+        },
+        verbose=True,
+    )
+    qp.add_chain(["input", "table_retriever", "table_output_parser"])
+    qp.add_link("input", "text2sql_prompt", dest_key="query_str")
+    qp.add_link("table_output_parser", "text2sql_prompt", dest_key="schema")
+    qp.add_chain(
+        ["text2sql_prompt", "text2sql_llm"]
+    )
+    response = qp.run(query=query) 
+    # replace chat_llm with sql query llm to get better 
+    # query_engine = SQLTableRetrieverQueryEngine(
+    #     sql_database=sql_database,
+    #     table_retriever=db_retriever,
+    #     llm=chat_llm,
+    #     synthesize_response=True,
+    # )
+    # response = query_engine.query(query)
+    time_taken = time.time() - start_time
+    logger.info(f"time taken to respond:{time_taken}s")
+    logger.info(response)
     df = get_qa_with_reference(px.active_session()) 
     # hallucination_eval, qa_correctness_eval = evaluation(queries_df=df, llm=chat_llm)
     # px.Client().log_evaluations(
     #     SpanEvaluations(eval_name="Hallucination", dataframe=hallucination_eval),
     #     SpanEvaluations(eval_name="QA Correctness", dataframe=qa_correctness_eval),
     # )
-    print(f"Check traces here:{px.active_session().url}")
+    logger.info(f"Check traces here:{px.active_session().url}")
     return response
-    # print(response.metadata)
+
