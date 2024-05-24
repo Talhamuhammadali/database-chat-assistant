@@ -52,11 +52,14 @@ set_global_handler("arize_phoenix")
 
 
 def llms_clients():
-    api_key="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"
-    chat_llm = Groq(model="llama3-8b-8192",
-    api_key=api_key,
-    temperature=0.5
-    )
+    #api_key="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"
+    #chat_llm = Groq(model="llama3-8b-8192",
+    #api_key=api_key,
+    #temperature=0.5
+    #)
+    triton_url = "localhost:8001"
+    model_name = "ensemble"
+    chat_llm = NvidiaTriton(server_url=triton_url, model_name=model_name)
     sql_llm = ""
     embediing_model = HuggingFaceEmbedding(model_name='all-MiniLM-L6-v2')
     Settings.embed_model=embediing_model
