@@ -1,7 +1,11 @@
 EXAMPLES = [
     {
-        "question": "What is my name",
-        "query": "Talha"
+        "question": "what is talha  working on.",
+        "query": """SELECT  u.firstname, u.lastname, te.spent_on, te.hours, te.comments
+            FROM users u
+            JOIN time_entries te ON u.id = te.user_id
+            WHERE u.login like '%zohaib%'
+        """
     },
     {
         "question": "What is role",
@@ -35,6 +39,7 @@ the issue's subject, description, status, priority, assigned user (assigned_to_i
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each issue."},
             {"name": "project_id", "description": "ID of the project the issue belongs to."},
+            {"name": "tracker_id", "description": "ID of the category the project is tracked by."},
             {"name": "subject", "description": "Subject or title of the issue."},
             {"name": "description", "description": "Description of the issue."},
             {"name": "status_id", "description": "ID of the status of the issue."},
@@ -45,8 +50,7 @@ the issue's subject, description, status, priority, assigned user (assigned_to_i
         "description": "Stores information about users in Redmine.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each user."},
-            {"name": "login", "description": "User's login name."},
-            {"name": "mail", "description": "User's email address."},
+            {"name": "login", "description": "User's email address."},
             {"name": "firstname", "description": "User's first name."},
             {"name": "lastname", "description": "User's last name."}
         ]
