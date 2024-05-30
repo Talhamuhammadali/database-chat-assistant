@@ -1,41 +1,112 @@
 EXAMPLES = [
     {
-        "question": "what is talha  working on.",
-        "query": """SELECT  u.firstname, u.lastname, te.spent_on, te.hours, te.comments
-            FROM users u
-            JOIN time_entries te ON u.id = te.user_id
-            WHERE u.login like '%zohaib%'
-        """
+        "query": "what is talha  working on ?",
+        "passage": """
+        SELECT  u.firstname, u.lastname, te.spent_on, te.hours, te.comments
+        FROM users u
+        JOIN time_entries te ON u.id = te.user_id
+        WHERE u.login like '%talha%'"""
     },
     {
-        "question": "What is role",
-        "query": "AI engineer"
+        "query": "Count all the projects worked on last month",
+        "passage": """
+        SELECT 
+            p.name AS project_name, 
+            COUNT(te.id) AS total_hours
+        FROM 
+            time_entries te
+        JOIN 
+            issues i ON te.issue_id = i.id
+        JOIN 
+            projects p ON i.project_id = p.id
+        WHERE 
+            te.spent_on >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+        GROUP BY 
+            p.name"""
     },
     {
-        "question": "What is my current project",
-        "query": "Developement of chat bot"
+        "query": "Count all the projects being worked on.",
+        "passage": """
+        SELECT 
+            p.name AS project_name, 
+            COUNT(te.id) AS total_hours
+        FROM 
+            time_entries te
+        JOIN 
+            issues i ON te.issue_id = i.id
+        JOIN 
+            projects p ON i.project_id = p.id
+        GROUP BY 
+            p.name"""
     },
     {
-        "question": "What is the expected ETA",
-        "query": "Approximately 100hrs of work"
+        "query": "Drop The table projects.",
+        "passage": "Select no;"
+    },
+    {
+        "query": "create The table new project with id, title, description columns.",
+        "passage": "Select no;"
+    },
+    {
+        "query": "what tasks are in ChatBot project",
+        "passage": """
+        SELECT 
+            i.subject AS task_name
+        FROM 
+            issues i
+        JOIN 
+            projects p ON i.project_id = p.id
+        WHERE 
+            p.name like '%ChatBot%'"""
+    },
+    {
+        "query": "How many tasks are assigned to talha muhammad and what is there status?",
+        "passage": """
+        SELECT i.id, i.subject, iss.name AS status
+        FROM issues i
+        JOIN issue_statuses iss ON i.status_id = iss.id
+        JOIN users u ON i.assigned_to_id = u.id
+        WHERE u.firstname LIKE '%talha%' and u.lastname LIKE '%muhammad%'"""
+    },
+    {
+        "query": "How many tasks were opened this month compared to last month?",
+        "passage": """
+        SELECT
+            SUM(CASE WHEN DATE_FORMAT(created_on, '%Y-%m') = DATE_FORMAT(CURRENT_DATE, '%Y-%m') THEN 1 ELSE 0 END) AS this_month,
+            SUM(CASE WHEN DATE_FORMAT(created_on, '%Y-%m') = DATE_FORMAT(CURRENT_DATE - INTERVAL 1 MONTH, '%Y-%m') THEN 1 ELSE 0 END) AS last_month
+        FROM issues"""
+    },
+    {
+        "query": "How many bugs were reported in the last quarter?",
+        "passage": """ 
+        SELECT COUNT(*) AS reported_bugs
+        FROM issues
+        WHERE tracker_id = (SELECT id FROM trackers WHERE name = 'Bug')
+        AND created_on >= DATE_SUB(DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'), INTERVAL QUARTER(CURRENT_DATE) - 1 QUARTER);"""
+    },
+    {
+        "query": "Update The titles of projects to empty string.",
+        "passage": "Select no;"
     },
 ]
 
 REDMINE_TABLES = {
     "projects": {
-        "description": """This table stores information about each project in Redmine.
-Each project has a unique identifier (id) and fields for attributes such as the project name,
-description, identifier (a short name used in URLs), parent project (if any), and more.""",
+        "description": """The core unit of organization in Redmine. Each project can have multiple issues, members, and associated trackers.""",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each project."},
             {"name": "name", "description": "Name of the project."},
             {"name": "description", "description": "Description of the project."},
             {"name": "identifier", "description": "Short name used in URLs for the project."}
+        ],
+        "relationships": [
+            {"related_table": "issues", "relation": "One-to-Many", "key": "id", "related_key": "project_id"},
+            {"related_table": "members", "relation": "One-to-Many", "key": "id", "related_key": "project_id"},
+            {"related_table": "projects_trackers", "relation": "One-to-Many", "key": "id", "related_key": "project_id"}
         ]
     },
     "issues": {
-        "description": """The issues table is where information about individual tasks, bugs, or features (referred to as issues) is stored. Each issue has a unique identifier (id) and fields for attributes such as the project it belongs to (project_id),
-the issue's subject, description, status, priority, assigned user (assigned_to_id), and more.""",
+        "description": """Represent tasks, bugs, or features within a project. Each issue is linked to a specific project and tracker and has an associated status to indicate its progress.""",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each issue."},
             {"name": "project_id", "description": "ID of the project the issue belongs to."},
@@ -44,15 +115,25 @@ the issue's subject, description, status, priority, assigned user (assigned_to_i
             {"name": "description", "description": "Description of the issue."},
             {"name": "status_id", "description": "ID of the status of the issue."},
             {"name": "assigned_to_id", "description": "ID of the user assigned to the issue."}
+        ],
+        "relationships": [
+            {"related_table": "projects", "relation": "Many-to-One", "key": "project_id", "related_key": "id"},
+            {"related_table": "time_entries", "relation": "One-to-Many", "key": "id", "related_key": "issue_id"},
+            {"related_table": "users", "relation": "Many-to-One", "key": "assigned_to_id", "related_key": "id"}
         ]
     },
     "users": {
-        "description": "Stores information about users in Redmine.",
+        "description": " Stores information about users in Redmine, including their login names, email addresses, and other user-related settings.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each user."},
             {"name": "login", "description": "User's email address."},
             {"name": "firstname", "description": "User's first name."},
             {"name": "lastname", "description": "User's last name."}
+        ],
+        "relationships": [
+            {"related_table": "issues", "relation": "One-to-Many", "key": "id", "related_key": "assigned_to_id"},
+            {"related_table": "time_entries", "relation": "One-to-Many", "key": "id", "related_key": "user_id"},
+            {"related_table": "members", "relation": "One-to-Many", "key": "id", "related_key": "user_id"}
         ]
     },
     "roles": {
@@ -62,6 +143,9 @@ the issue's subject, description, status, priority, assigned user (assigned_to_i
             {"name": "name", "description": "Name of the role."},
             {"name": "permissions", "description": "Permissions assigned to the role."},
             {"name": "assignable", "description": "Indicates if the role is assignable."}
+        ],
+        "relationships": [
+            {"related_table": "member_roles", "relation": "One-to-Many", "key": "id", "related_key": "role_id"}
         ]
     },
     "members": {
@@ -71,35 +155,50 @@ the issue's subject, description, status, priority, assigned user (assigned_to_i
             {"name": "user_id", "description": "ID of the user."},
             {"name": "project_id", "description": "ID of the project."},
             {"name": "role_id", "description": "ID of the role within the project."}
+        ],
+        "relationships": [
+            {"related_table": "projects", "relation": "Many-to-One", "key": "project_id", "related_key": "id"},
+            {"related_table": "users", "relation": "Many-to-One", "key": "user_id", "related_key": "id"},
+            {"related_table": "member_roles", "relation": "One-to-Many", "key": "id", "related_key": "member_id"}
         ]
     },
     "trackers": {
-        "description": "Categorizes different types of issues in Redmine.",
+        "description": "Define different types of issues (e.g., bug, feature, support) that can be used in projects. Projects specify which trackers they use through the projects_trackers table.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each tracker."},
             {"name": "name", "description": "Name of the tracker."},
             {"name": "is_in_chlog", "description": "Indicates if the tracker should be shown in the changelog."}
+        ],
+        "relationships": [
+            {"related_table": "projects_trackers", "relation": "One-to-Many", "key": "id", "related_key": "tracker_id"},
+            {"related_table": "issues", "relation": "One-to-Many", "key": "id", "related_key": "tracker_id"}
         ]
     },
     "issue_statuses": {
-        "description": "Defines the possible statuses that issues can have.",
+        "description": "Defines the possible statuses that issues can have, such as 'New', 'In Progress', 'Resolved', etc.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each status."},
             {"name": "name", "description": "Name of the status."},
             {"name": "is_closed", "description": "Indicates if the status represents a closed state."}
+        ],
+        "relationships": [
+            {"related_table": "issues", "relation": "One-to-Many", "key": "id", "related_key": "status_id"}
         ]
     },
     "custom_fields": {
-        "description": "Stores information about custom fields that can be added to projects or issues.",
+        "description": "Stores information about custom fields that can be added to projects or issues, including their names, types, and configurations.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each custom field."},
             {"name": "name", "description": "Name of the custom field."},
             {"name": "field_format", "description": "Format of the custom field."},
             {"name": "is_required", "description": "Indicates if the custom field is required."}
+        ],
+        "relationships": [
+            {"related_table": "custom_values", "relation": "One-to-Many", "key": "id", "related_key": "custom_field_id"}
         ]
     },
     "time_entries": {
-        "description": "Records time entries for work done on issues by users.",
+        "description": "Records time entries for work done on issues, tracking the amount of time spent by users on specific tasks",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each time entry."},
             {"name": "user_id", "description": "ID of the user who logged the time entry."},
@@ -108,10 +207,14 @@ the issue's subject, description, status, priority, assigned user (assigned_to_i
             {"name": "activity_id", "description": "ID of the activity associated with the time entry."},
             {"name": "spent_on", "description": "Date when the time was logged."},
             {"name": "comments", "description": "Additional comments or description for the time entry."}
+        ],
+        "relationships": [
+            {"related_table": "issues", "relation": "Many-to-One", "key": "issue_id", "related_key": "id"},
+            {"related_table": "users", "relation": "Many-to-One", "key": "user_id", "related_key": "id"}
         ]
     },
     "attachments": {
-        "description": "Stores file attachments associated with issues or other entities.",
+        "description": "Stores file attachments associated with issues or other entities in Redmine, such as documents, images, or screenshots.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each attachment."},
             {"name": "container_id", "description": "ID of the entity the attachment belongs to."},
@@ -119,32 +222,79 @@ the issue's subject, description, status, priority, assigned user (assigned_to_i
             {"name": "filename", "description": "Name of the attached file."},
             {"name": "disk_filename", "description": "Name of the file on disk."},
             {"name": "filesize", "description": "Size of the attached file."}
+        ],
+        "relationships": [
+            {"related_table": "issues", "relation": "Many-to-One", "key": "container_id", "related_key": "id", "condition": "container_type='Issue'"}
         ]
     },
     "enumerations": {
-        "description": "Contains various enumerations used throughout Redmine.",
+        "description": "Contains various enumerations used throughout Redmine, such as issue priorities, time entry activities, and custom field formats.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each enumeration."},
             {"name": "name", "description": "Name of the enumeration."},
             {"name": "position", "description": "Position of the enumeration."},
             {"name": "is_default", "description": "Indicates if the enumeration is a default option."}
+        ],
+        "relationships": [
+            {"related_table": "time_entries", "relation": "One-to-Many", "key": "id", "related_key": "activity_id", "condition": "type='TimeEntryActivity'"}
         ]
     },
     "member_roles": {
-        "description": "Associates roles with members within projects, defining the roles each member holds.",
+        "description": "Associates roles with members (users) within projects, defining the roles each member holds in a project.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each member role."},
             {"name": "member_id", "description": "ID of the member associated with the role."},
             {"name": "role_id", "description": "ID of the role assigned to the member."},
             {"name": "inherited_from", "description": "Indicates if the role is inherited from a parent project."}
+        ],
+        "relationships": [
+            {"related_table": "members", "relation": "Many-to-One", "key": "member_id", "related_key": "id"},
+            {"related_table": "roles", "relation": "Many-to-One", "key": "role_id", "related_key": "id"}
         ]
     },
     "projects_trackers": {
-        "description": "Defines which trackers are available for each project.",
+        "description": "Defines which trackers are available for each project, specifying which types of issues can be created within a project.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each project-tracker association."},
             {"name": "project_id", "description": "ID of the project."},
             {"name": "tracker_id", "description": "ID of the tracker associated with the project."}
+        ],
+        "relationships": [
+            {"related_table": "projects", "relation": "Many-to-One", "key": "project_id", "related_key": "id"},
+            {"related_table": "trackers", "relation": "Many-to-One", "key": "tracker_id", "related_key": "id"}
         ]
     }
 }
+
+TEXT_TO_SQL_PROMPT = """Given an input question, first create a syntactically correct {dialect} query to run, then look at the results of the query and return the answer. You can order the results by a relevant column to return the most interesting examples in the database.
+
+Never query for all the columns from a specific table, only ask for a few relevant columns given the question.
+
+Pay attention to use only the column names that you can see in the schema description. Be careful to not query for columns that do not exist. Pay attention to which column is in which table. Also, qualify column names with the table name when needed. 
+
+Match keywords using 'like' for case sensitivity.
+
+Read only queries are permitted, dont entertain question asking to Drop, Update or Create Tables. In this case, Generate "Select no;"
+
+You are required to use the following format, each taking one line:
+
+Question: Question here
+SQLQuery: SQL Query to run
+SQLResult: Result of the SQLQuery
+Answer: Final answer here
+
+Only use tables listed below.
+{schema}
+
+Sql queries for Similar questions are listed below.
+{examples}
+
+Question: {query_str}
+SQLQuery: """
+
+RESPONSE_SYNTHESIS_PROMPT = """You are a DataBase Assistant. Given an input question, synthesize a response from the query results. 
+Do not fabricate data when responding. Read only queries are permitted, dont entertain question asking to Drop, Update or Create Tables.
+Query: {query_str}
+SQL: {sql_query}
+SQL Response: {context_str}
+Response: """
