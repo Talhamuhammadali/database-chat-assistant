@@ -1,11 +1,11 @@
 EXAMPLES = [
     {
-        "query": "what is talha  working on ?",
+        "query": "what is talha  working on currently?",
         "passage": """
         SELECT  u.firstname, u.lastname, te.spent_on, te.hours, te.comments
         FROM users u
         JOIN time_entries te ON u.id = te.user_id
-        WHERE u.login like '%talha%'"""
+        WHERE u.firstname like '%talha%'"""
     },
     {
         "query": "Count all the projects worked on last month",
@@ -28,16 +28,13 @@ EXAMPLES = [
         "query": "Count all the projects being worked on.",
         "passage": """
         SELECT 
-            p.name AS project_name, 
-            COUNT(te.id) AS total_hours
+            COUNT(DISTINCT p.id) AS project_count
         FROM 
-            time_entries te
+            projects p
         JOIN 
-            issues i ON te.issue_id = i.id
+            issues i ON p.id = i.project_id
         JOIN 
-            projects p ON i.project_id = p.id
-        GROUP BY 
-            p.name"""
+            time_entries te ON i.id = te.issue_id;"""
     },
     {
         "query": "Drop The table projects.",
@@ -85,9 +82,134 @@ EXAMPLES = [
         AND created_on >= DATE_SUB(DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'), INTERVAL QUARTER(CURRENT_DATE) - 1 QUARTER);"""
     },
     {
-        "query": "Update The titles of projects to empty string.",
-        "passage": "Select no;"
+        "query": "The number of tasks assigned to Zarar that are in progress",
+        "passage": """
+        SELECT COUNT(*) AS in_progress_tasks
+        FROM issues
+        JOIN users ON issues.assigned_to_id = users.id
+        JOIN issue_statuses ON issues.status_id = issue_statuses.id
+        WHERE users.firstname like '%Zarar%' AND issue_statuses.name like '%In Progress%';"""
     },
+    {
+        "query": "Tasks closed by QA that were assigned to Muhammad Usama.",
+        "passage": """
+        SELECT 
+            issues.subject, 
+            issue_statuses.name as status
+        FROM issues 
+        JOIN users ON issues.assigned_to_id = users.id
+        JOIN issue_statuses ON issues.status_id = issue_statuses.id
+        WHERE 
+            users.firstname like '%Muhammad%' 
+            AND users.lastname like '%Usama%' 
+            AND issue_statuses.name like '%Closed(QA)%';"""
+    },
+    {
+        "query": "Bugs that require urgent attention in nimar projects.",
+        "passage": """
+        SELECT 
+            i.subject,
+            i.description,
+            i.due_date,
+            p.name AS project_name
+        FROM 
+            issues AS i
+        JOIN 
+            projects AS p ON i.project_id = p.id
+        WHERE 
+            i.tracker_id IN (SELECT id FROM trackers WHERE name = 'Bug')
+            AND i.priority_id IN (SELECT id FROM enumerations WHERE name LIKE '%Urgent%')
+            AND i.project_id IN (SELECT id FROM projects WHERE name LIKE '%nimar%')
+        Limit 50;"""
+    },
+    {
+        "query": "Provide tasks being worked on by non developers.",
+        "passage": """
+        SELECT 
+            u.firstname as assigned_to,
+            i.subject as title,
+            i.description as details,
+            i.due_date,
+            s.name as status,
+            r.name as role
+        FROM 
+            issues AS i
+        JOIN 
+            users AS u ON i.assigned_to_id = u.id
+        JOIN 
+            issue_statuses AS s ON i.status_id = s.id
+        LEFT JOIN 
+            members AS m ON m.user_id = u.id
+        LEFT JOIN 
+            member_roles AS mr ON mr.member_id = m.id
+        LEFT JOIN 
+            roles AS r ON mr.role_id = r.id
+        WHERE 
+            s.name like '%In Progress%'
+            AND (r.name IS NULL OR r.name not like '%Developer%')
+        limit 50;"""
+    },
+    {
+        "query": "count all the tasks in progress by non developers.",
+        "passage": """
+        SELECT 
+            count(*)
+        FROM 
+            issues AS i
+        JOIN 
+            users AS u ON i.assigned_to_id = u.id
+        JOIN 
+            issue_statuses AS s ON i.status_id = s.id
+        LEFT JOIN 
+            members AS m ON m.user_id = u.id
+        LEFT JOIN 
+            member_roles AS mr ON mr.member_id = m.id
+        LEFT JOIN 
+            roles AS r ON mr.role_id = r.id
+        WHERE 
+            s.name like '%In Progress%'
+            AND (r.name IS NULL OR r.name not like '%Developer%')"""
+    },
+    {
+        "query": "Tasks under ai-nimar project and there type",
+        "passage": """
+        SELECT 
+            i.subject AS task_name,
+            t.name AS tracker_name
+        FROM 
+            issues AS i
+        JOIN 
+            projects AS p ON i.project_id = p.id
+        JOIN 
+            trackers AS t ON i.tracker_id = t.id
+        WHERE 
+            p.name LIKE '%ai-nimar%'
+        LIMIT 50;"""
+    },
+    {
+        "query": "Drop The table projects.",
+        "passage": """
+        SELECT 
+            p.name AS parent_project_name
+        FROM 
+            projects p
+        JOIN 
+            projects AS child_p ON p.id = child_p.parent_id
+        WHERE 
+            child_p.name like '%NLP%'"""
+    },
+    # {
+    #     "query": "Drop The table projects.",
+    #     "passage": """Select no;"""
+    # },
+    # {
+    #     "query": "Drop The table projects.",
+    #     "passage": """Select no;"""
+    # },
+    #     {
+    #     "query": "Drop The table projects.",
+    #     "passage": """Select no;"""
+    # },
 ]
 
 REDMINE_TABLES = {

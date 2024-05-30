@@ -18,7 +18,6 @@ from llama_index.core import (
     set_global_handler,
 )
 from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.core.query_engine import NLSQLTableQueryEngine, SQLTableRetrieverQueryEngine
 from llama_index.llms.groq import Groq
 from llama_index.llms.nvidia_triton import NvidiaTriton
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
@@ -26,9 +25,7 @@ from llama_index.core.retrievers import SQLRetriever
 from typing import List
 from llama_index.core.query_pipeline import (
     QueryPipeline as QP,
-    Link,
     InputComponent,
-    CustomQueryComponent,
     FnComponent
 )
 from llama_index.core.objects import (
@@ -59,7 +56,14 @@ logging.basicConfig(level="INFO")
 logger = logging.getLogger("Redmine-Assitant")
 logger.setLevel(logging.INFO)
 
+engine = mysql_connection()
+metadata_obj = MetaData()
+sql_database = SQLDatabase(engine)
+tables = [*REDMINE_TABLES.keys()]
+metadata_obj.reflect(bind=engine, only=tables)
+
 def llms_clients():
+    logger.info("Initializing LLM and Embedings")
     api_key="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"
     chat_llm = Groq(model="llama3-8b-8192",
     api_key=api_key,
@@ -96,12 +100,28 @@ def set_up_database_retriever(sql_database: SQLDatabase, metadata_obj: MetaData,
     return db_retriever
 
 def get_context_string(table_data: List[SQLTableSchema]):
-    """Get table context string."""
+    """
+    The get_context_string function takes a list of SQLTableSchema objects and returns a string.
+    The string is the table context for the tables in the list.
+    
+    
+    :param table_data: List[SQLTableSchema]: Get the table name
+    :return: A string that contains the table and column description for each of the tables in the query
+    :doc-author: Trelent
+    """
     context_strs = []
     for table_schema_obj in table_data:
-        table_info = REDMINE_TABLES[table_schema_obj.table_name]
-        description = json.dumps(table_info)
-        context_str = f"Table and column description for table '{table_schema_obj.table_name}':\n {description}"  
+        # table_info = REDMINE_TABLES[table_schema_obj.table_name]
+        table_info = sql_database.get_single_table_info(
+            table_schema_obj.table_name
+        )
+        additional_info = REDMINE_TABLES[table_schema_obj.table_name]
+        table_desc = additional_info["description"]
+        important_columns = json.dumps(additional_info["important_columns"], indent=2)
+        schema = json.dumps(table_info, indent=4)
+        context_str = f"Table schema for table '{table_schema_obj.table_name}':\n {schema}\n\n"  
+        context_str += f"Table description:\n{table_desc}\n\n"
+        context_str += f"Some important columns and descriptions:\n{important_columns}\n\n"
         context_strs.append(context_str)
     return "\n\n".join(context_strs)
 
@@ -116,7 +136,7 @@ def retrieve_examples(query: str):
         VectorStoreIndex,
         storage_context
     )
-    retriever = obj_idx.as_retriever(similarity_top_k=1)
+    retriever = obj_idx.as_retriever(similarity_top_k=3)
     relavent_examples = retriever.retrieve(query)
     template = """Example Question: {question}\n
 SQL Query:
@@ -150,13 +170,8 @@ def sql_parser(response: ChatResponse):
 
 def ask(query: str):
     chat_llm, _ = llms_clients()
-    engine = mysql_connection()
-    metadata_obj = MetaData()
-    sql_database = SQLDatabase(engine)
-    tables = [*REDMINE_TABLES.keys()]
-    metadata_obj.reflect(bind=engine, only=tables)
     start_time = time.time()
-    # Initializing pipline components 
+    logger.info("Setting up pipline components")
     db_retriever = set_up_database_retriever(
         sql_database=sql_database,
         metadata_obj=metadata_obj,
@@ -173,9 +188,9 @@ def ask(query: str):
         
     )
     time_taken = time.time() - start_time
-    logger.info(f"time taken to process db tables:{time_taken}s")
+    logger.info(f"time taken to set up components:{time_taken}s")
     
-    # Creating Sql pipeline
+    logger.info("Running User query")
     start_time = time.time()
 
     text2sql_prompt = sql_template.partial_format(
@@ -206,18 +221,14 @@ def ask(query: str):
     qp.add_link("extract_sql_query", "response_prompt", dest_key="sql_query")
     qp.add_chain(["response_prompt", "final_response_llm"])
     
-    response = qp.run(query=query) 
-    # replace chat_llm with sql query llm to get better 
-    # query_engine = SQLTableRetrieverQueryEngine(
-    #     sql_database=sql_database,
-    #     table_retriever=db_retriever,
-    #     llm=chat_llm,
-    #     synthesize_response=True,
-    # )
-    # response = query_engine.query(query)
+    try:
+        response = qp.run(query=query)
+    except Exception as ex:
+        response = f"Could not retrieve data from db. Be more specific"
     time_taken = time.time() - start_time
-    logger.info(f"time taken to respond:{time_taken}s")
+    logger.info(f"Time taken to respond:{time_taken}s")
     logger.info(response)
+    
     df = get_qa_with_reference(px.active_session()) 
     # hallucination_eval, qa_correctness_eval = evaluation(queries_df=df, llm=chat_llm)
     # px.Client().log_evaluations(
