@@ -208,6 +208,7 @@ def ask(query: str):
             "sql_retriever": sql_retriever,
             "response_prompt": response_prompt,
             "final_response_llm": chat_llm,
+            "response_parser": chat_llm
         },
         verbose=True,
     )
