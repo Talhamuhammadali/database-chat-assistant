@@ -17,4 +17,4 @@ async def root():
 @app.post("/ask")
 async def ask_llama(request: userInput):
     response = ask(query=request.question)
-    return {"message": response}
+    return response

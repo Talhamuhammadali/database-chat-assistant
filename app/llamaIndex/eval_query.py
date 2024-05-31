@@ -3,7 +3,7 @@ from phoenix.evals import (
     HALLUCINATION_PROMPT_TEMPLATE,
     QA_PROMPT_RAILS_MAP,
     QA_PROMPT_TEMPLATE,
-    OpenAIModel,
+    LiteLLMModel,
     llm_classify,
 )
 from pandas import DataFrame as df

@@ -107,7 +107,6 @@ def get_context_string(table_data: List[SQLTableSchema]):
     
     :param table_data: List[SQLTableSchema]: Get the table name
     :return: A string that contains the table and column description for each of the tables in the query
-    :doc-author: Trelent
     """
     context_strs = []
     for table_schema_obj in table_data:
@@ -119,9 +118,9 @@ def get_context_string(table_data: List[SQLTableSchema]):
         table_desc = additional_info["description"]
         important_columns = json.dumps(additional_info["important_columns"], indent=2)
         schema = json.dumps(table_info, indent=4)
-        context_str = f"Table schema for table '{table_schema_obj.table_name}':\n {schema}\n\n"  
-        context_str += f"Table description:\n{table_desc}\n\n"
-        context_str += f"Some important columns and descriptions:\n{important_columns}\n\n"
+        context_str = f"{schema}\n\n"  
+        context_str += f"Table description for table '{table_schema_obj.table_name}':\n{table_desc}\n\n"
+        context_str += f"Some important columns and descriptions for table '{table_schema_obj.table_name}':\n{important_columns}\n"
         context_strs.append(context_str)
     return "\n\n".join(context_strs)
 
@@ -168,6 +167,11 @@ def sql_parser(response: ChatResponse):
         return "SELECT * FROM rx_statistics_charts;"
     return response.strip().strip("```").strip()
 
+def response_parser(respose: ChatResponse):
+    response = response.message.content
+    return response
+
+    
 def ask(query: str):
     chat_llm, _ = llms_clients()
     start_time = time.time()
@@ -187,6 +191,7 @@ def ask(query: str):
         query_str=query,
         
     )
+    output_parser = FnComponent(fn=response_parser)
     time_taken = time.time() - start_time
     logger.info(f"time taken to set up components:{time_taken}s")
     
@@ -208,7 +213,7 @@ def ask(query: str):
             "sql_retriever": sql_retriever,
             "response_prompt": response_prompt,
             "final_response_llm": chat_llm,
-            "response_parser": chat_llm
+            "response_parser": output_parser
         },
         verbose=True,
     )
@@ -221,14 +226,16 @@ def ask(query: str):
     qp.add_link("sql_retriever", "response_prompt", dest_key="context_str")
     qp.add_link("extract_sql_query", "response_prompt", dest_key="sql_query")
     qp.add_chain(["response_prompt", "final_response_llm"])
+    qp.add_chain(["final_response_llm", "response_parser"])
     
     try:
         response = qp.run(query=query)
     except Exception as ex:
         response = f"Could not retrieve data from db. Be more specific"
+        logger.info(f"Error: {ex}")
     time_taken = time.time() - start_time
     logger.info(f"Time taken to respond:{time_taken}s")
-    logger.info(response)
+    logger.info(type(response))
     
     df = get_qa_with_reference(px.active_session()) 
     # hallucination_eval, qa_correctness_eval = evaluation(queries_df=df, llm=chat_llm)
