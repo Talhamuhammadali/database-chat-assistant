@@ -46,7 +46,7 @@ logger = logging.getLogger("langchain_service")
 #     beam_width=2,
 #     tokens=500,
 # )
-chat_llm = ChatGroq(temperature=0, model_name="mixtral-8x7b-32768")
+chat_llm = ChatGroq(temperature=0, model_name="llama3-8b-8192")
 
 def choice(options: list, input:str, role:str = "assistant"):
     zsc_prompt = ChatPromptTemplate.from_messages(
