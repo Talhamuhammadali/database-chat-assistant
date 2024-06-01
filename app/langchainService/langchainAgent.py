@@ -6,6 +6,7 @@ from langchain.agents import Tool
 from langchain.agents import AgentExecutor, create_structured_chat_agent
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
 from langchain_nvidia_trt.llms import TritonTensorRTLLM
+from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -23,34 +24,30 @@ from app.langchainService.langchain_util import(
 )
 logging.basicConfig(level="INFO")
 logger = logging.getLogger("langchain_service")
-api_key = "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"
-base_url = "https://api.ngc.nvidia.com/v2/"
+# api_key = "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"
+# base_url = "https://api.ngc.nvidia.com/v2/"
+# model = "ai-llama3-8b"
+# chat_llm = ChatNVIDIA(
+#     model=model,
+#     temperature=0.5,
+#     beam_width=5,
+#     tokens=1024,
+#     top_p=1,
+#     max_tokens=1024,
+#     streaming=True,
+#     api_key=api_key
+# )
+
 # UNCOMMENT to use for prod. currenly using nvida api for developement
 # chat_llm = TritonTensorRTLLM(
 #     server_url="http://localhost:8000",
-#     model_name="llama",
+#     model_name="ensemble",
 #     temperature=0.2,
 #     beam_width=2,
 #     tokens=500,
-#     )
-# sql_llm = TritonTensorRTLLM(
-#     server_url="http://localhost:8000",
-#     model_name="sqlcoder",
-#     beam_width=5,
-#     tokens=500,
-#     )
-model = "ai-llama3-8b"
-print(model)
-chat_llm = ChatNVIDIA(
-    model=model,
-    temperature=0.5,
-    beam_width=5,
-    tokens=1024,
-    top_p=1,
-    max_tokens=1024,
-    streaming=True,
-    api_key=api_key
-)
+# )
+chat_llm = ChatGroq(temperature=0, model_name="mixtral-8x7b-32768")
+
 def choice(options: list, input:str, role:str = "assistant"):
     zsc_prompt = ChatPromptTemplate.from_messages(
         [

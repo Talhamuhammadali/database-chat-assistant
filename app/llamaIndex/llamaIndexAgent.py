@@ -38,16 +38,18 @@ from sqlalchemy import (
     MetaData
 )
 from app.llamaIndex.eval_query import evaluation
-from app.utils.connections import (
-    chromadb_connection,
-    mysql_connection
-)
 from app.llamaIndex.db_utils import (
     REDMINE_TABLES,
     EXAMPLES, 
     TEXT_TO_SQL_PROMPT,
     RESPONSE_SYNTHESIS_PROMPT
 )
+from app.utils.connections import (
+    chromadb_connection,
+    mysql_connection
+)
+from app.utils.settings import GROQ_API_KEY
+
 
 px.launch_app()
 set_global_handler("arize_phoenix")
@@ -64,7 +66,7 @@ metadata_obj.reflect(bind=engine, only=tables)
 
 def llms_clients():
     logger.info("Initializing LLM and Embedings")
-    api_key="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"
+    api_key=GROQ_API_KEY
     chat_llm = Groq(model="llama3-8b-8192",
     api_key=api_key,
     temperature=0.3
