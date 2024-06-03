@@ -5,7 +5,7 @@ EXAMPLES = [
         SELECT  u.firstname, u.lastname, te.spent_on, te.hours, te.comments
         FROM users u
         JOIN time_entries te ON u.id = te.user_id
-        WHERE u.firstname like '%talha%'"""
+        WHERE u.firstname SOUNDS LIKE '%talha%'"""
     },
     {
         "query": "Count all the projects worked on last month",
@@ -54,7 +54,7 @@ EXAMPLES = [
         JOIN 
             projects p ON i.project_id = p.id
         WHERE 
-            p.name like '%ChatBot%'"""
+            p.name  LIKE '%ChatBot%'"""
     },
     {
         "query": "How many tasks are assigned to talha muhammad and what is there status?",
@@ -63,7 +63,7 @@ EXAMPLES = [
         FROM issues i
         JOIN issue_statuses iss ON i.status_id = iss.id
         JOIN users u ON i.assigned_to_id = u.id
-        WHERE u.firstname LIKE '%talha%' and u.lastname LIKE '%muhammad%'"""
+        WHERE u.firstname SOUNDS LIKE '%talha%' and u.lastname SOUNDS LIKE '%muhammad%'"""
     },
     {
         "query": "How many tasks were opened this month compared to last month?",
@@ -88,7 +88,7 @@ EXAMPLES = [
         FROM issues
         JOIN users ON issues.assigned_to_id = users.id
         JOIN issue_statuses ON issues.status_id = issue_statuses.id
-        WHERE users.firstname like '%Zarar%' AND issue_statuses.name like '%In Progress%';"""
+        WHERE users.firstname SOUNDS LIKE '%Zarar%' AND issue_statuses.name like '%In Progress%';"""
     },
     {
         "query": "Tasks closed by QA that were assigned to Muhammad Usama.",
@@ -100,8 +100,8 @@ EXAMPLES = [
         JOIN users ON issues.assigned_to_id = users.id
         JOIN issue_statuses ON issues.status_id = issue_statuses.id
         WHERE 
-            users.firstname like '%Muhammad%' 
-            AND users.lastname like '%Usama%' 
+            users.firstname SOUNDS LIKE '%Muhammad%' 
+            AND users.lastname SOUNDS LIKE '%Usama%' 
             AND issue_statuses.name like '%Closed(QA)%';"""
     },
     {
@@ -119,7 +119,7 @@ EXAMPLES = [
         WHERE 
             i.tracker_id IN (SELECT id FROM trackers WHERE name = 'Bug')
             AND i.priority_id IN (SELECT id FROM enumerations WHERE name LIKE '%Urgent%')
-            AND i.project_id IN (SELECT id FROM projects WHERE name LIKE '%nimar%')
+            AND i.project_id IN (SELECT id FROM projects WHERE name SOUNDS LIKE '%nimar%')
         Limit 50;"""
     },
     {
@@ -198,10 +198,20 @@ EXAMPLES = [
         WHERE 
             child_p.name like '%NLP%'"""
     },
-    # {
-    #     "query": "Drop The table projects.",
-    #     "passage": """Select no;"""
-    # },
+    {
+        "query": "what projects saud is working on.",
+        "passage": """
+        SELECT 
+            DISTINCT p.name AS project_name
+        FROM 
+            projects p
+        JOIN 
+            issues i ON p.id = i.project_id
+        JOIN 
+            users u ON i.assigned_to_id = u.id
+        WHERE 
+            u.firstname Sounds like '%Saud%'"""
+    },
     # {
     #     "query": "Drop The table projects.",
     #     "passage": """Select no;"""
@@ -420,3 +430,7 @@ Query: {query_str}
 SQL: {sql_query}
 SQL Response: {context_str}
 Response: """
+
+REFINEMENT_PROMPT = """"""
+
+RETRY_PROMPT = """"""

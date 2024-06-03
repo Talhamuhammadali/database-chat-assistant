@@ -51,7 +51,7 @@ from app.utils.connections import (
 from app.utils.settings import GROQ_API_KEY
 
 
-px.launch_app()
+# px.launch_app()
 set_global_handler("arize_phoenix")
 
 logging.basicConfig(level="INFO")
@@ -169,7 +169,11 @@ def sql_parser(response: ChatResponse):
         return "SELECT * FROM rx_statistics_charts;"
     return response.strip().strip("```").strip()
 
-def response_parser(respose: ChatResponse):
+def parse_rows(node):
+    rows = node[0].node.text
+    return rows
+
+def response_parser(response: ChatResponse):
     response = response.message.content
     return response
 
@@ -188,6 +192,7 @@ def ask(query: str):
     ex_retriever = FnComponent(fn=retrieve_examples)
     extract_sql_query = FnComponent(fn=sql_parser)
     sql_retriever = SQLRetriever(sql_database)
+    rows_parser = FnComponent(fn=parse_rows)
     response_prompt = PromptTemplate(RESPONSE_SYNTHESIS_PROMPT)
     response_prompt = response_prompt.partial_format(
         query_str=query,
@@ -213,6 +218,7 @@ def ask(query: str):
             "text2sql_llm": chat_llm,
             "extract_sql_query": extract_sql_query,
             "sql_retriever": sql_retriever,
+            "rows_parser": rows_parser,
             "response_prompt": response_prompt,
             "final_response_llm": chat_llm,
             "response_parser": output_parser
@@ -224,12 +230,11 @@ def ask(query: str):
     qp.add_link("input", "text2sql_prompt", dest_key="query_str")
     qp.add_link("table_output_parser", "text2sql_prompt", dest_key="schema")
     qp.add_link("examples", "text2sql_prompt", dest_key="examples")
-    qp.add_chain(["text2sql_prompt", "text2sql_llm", "extract_sql_query", "sql_retriever"])
-    qp.add_link("sql_retriever", "response_prompt", dest_key="context_str")
+    qp.add_chain(["text2sql_prompt", "text2sql_llm", "extract_sql_query", "sql_retriever", "rows_parser"])
+    qp.add_link("rows_parser", "response_prompt", dest_key="context_str")
     qp.add_link("extract_sql_query", "response_prompt", dest_key="sql_query")
     qp.add_chain(["response_prompt", "final_response_llm"])
     qp.add_chain(["final_response_llm", "response_parser"])
-    
     try:
         response = qp.run(query=query)
     except Exception as ex:
@@ -245,6 +250,6 @@ def ask(query: str):
     #     SpanEvaluations(eval_name="Hallucination", dataframe=hallucination_eval),
     #     SpanEvaluations(eval_name="QA Correctness", dataframe=qa_correctness_eval),
     # )
-    logger.info(f"Check traces here:{px.active_session().url}")
+    # logger.info(f"Check traces here:{px.active_session().url}")
     return response
 
