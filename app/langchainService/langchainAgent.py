@@ -9,9 +9,6 @@ from langchain_nvidia_trt.llms import TritonTensorRTLLM
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-
-
-# from app.utils.connections import get_db
 from app.langchainService.prompts import (
     CHOICE_PROMPT,
     SYSTEM_PROMPT,
@@ -22,9 +19,11 @@ from app.langchainService.langchain_util import(
     GenerateQuery,
     ExecutreQuery
 )
+from app.utils.settings import GROQ_API_KEY
+
 logging.basicConfig(level="INFO")
 logger = logging.getLogger("langchain_service")
-# api_key = "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"
+# api_key = <key>
 # base_url = "https://api.ngc.nvidia.com/v2/"
 # model = "ai-llama3-8b"
 # chat_llm = ChatNVIDIA(
@@ -46,7 +45,11 @@ logger = logging.getLogger("langchain_service")
 #     beam_width=2,
 #     tokens=500,
 # )
-chat_llm = ChatGroq(temperature=0, model_name="llama3-8b-8192")
+chat_llm = ChatGroq(
+    temperature=0,
+    api_key=GROQ_API_KEY,
+    model_name="llama3-8b-8192"
+)
 
 def choice(options: list, input:str, role:str = "assistant"):
     zsc_prompt = ChatPromptTemplate.from_messages(
@@ -142,10 +145,10 @@ def agent_test(user_question: str):
     logger.info(response)
     return response
     
-if __name__ == "__main__":
+def ask_lang(query: str):
     start_time = time.time()
     # conversation(user_question="On which channel flood was discussed the most")
-    agent_test(user_question="give me todays weather")
+    agent_test(user_question=query)
     end_time = time.time()
     time_taken = end_time - start_time
     logger.info(f"Assistant took {time_taken}s to respond")

@@ -15,7 +15,6 @@ from llama_index.core import (
     VectorStoreIndex,
     SimpleDirectoryReader,
     StorageContext,
-    set_global_handler,
 )
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.llms.groq import Groq
@@ -37,22 +36,22 @@ from llama_index.core.objects import (
 from sqlalchemy import (
     MetaData
 )
+from app.telementry import instrument
 from app.llamaIndex.eval_query import evaluation
 from app.llamaIndex.db_utils import (
     REDMINE_TABLES,
     EXAMPLES, 
     TEXT_TO_SQL_PROMPT,
-    RESPONSE_SYNTHESIS_PROMPT
+    RESPONSE_SYNTHESIS_PROMPT,
+    STRATEGY_PROMPT
 )
 from app.utils.connections import (
     chromadb_connection,
-    mysql_connection
+    mysql_connection,
+    llms_clients_index
 )
 from app.utils.settings import GROQ_API_KEY
-
-
-# px.launch_app()
-set_global_handler("arize_phoenix")
+instrument()
 
 logging.basicConfig(level="INFO")
 logger = logging.getLogger("Redmine-Assitant")
@@ -74,114 +73,48 @@ def llms_clients():
     #triton_url = "localhost:8001"
     #model_name = "ensemble"
     #chat_llm = NvidiaTriton(server_url=triton_url, model_name=model_name)
-    sql_llm = ""
     embediing_model = HuggingFaceEmbedding(model_name='intfloat/e5-base-v2')
     Settings.embed_model=embediing_model
-    return chat_llm, sql_llm
+    return chat_llm, embediing_model
 
-def set_up_database_retriever(sql_database: SQLDatabase, metadata_obj: MetaData, top_k: int):
-    # creating a vector store
-    chroma_collection = chromadb_connection(collection="sql_tables")
-    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    # Creating index for each table in database
-    table_node_mapping = SQLTableNodeMapping(sql_database)
-    table_schema_objs = []
-    for table_name in metadata_obj.tables.keys():
-        table = SQLTableSchema(table_name=table_name)
-        table.context_str = REDMINE_TABLES[table_name]["description"]
-        table_schema_objs.append(table)
-        
-    db_index = ObjectIndex.from_objects(
-        table_schema_objs,
-        table_node_mapping,
-        VectorStoreIndex,
-        storage_context
+def strategy_pipeline(query: str):
+    chat_llm, Settings.embed_model = llms_clients_index()
+    db_retriever = set_up_database_retriever(
+        sql_database=sql_database,
+        metadata_obj=metadata_obj,
+        top_k=5
     )
-    db_retriever = db_index.as_retriever(similarity_top_k=top_k)
-    return db_retriever
-
-def get_context_string(table_data: List[SQLTableSchema]):
-    """
-    The get_context_string function takes a list of SQLTableSchema objects and returns a string.
-    The string is the table context for the tables in the list.
-    
-    
-    :param table_data: List[SQLTableSchema]: Get the table name
-    :return: A string that contains the table and column description for each of the tables in the query
-    """
-    context_strs = []
-    for table_schema_obj in table_data:
-        # table_info = REDMINE_TABLES[table_schema_obj.table_name]
-        table_info = sql_database.get_single_table_info(
-            table_schema_obj.table_name
-        )
-        additional_info = REDMINE_TABLES[table_schema_obj.table_name]
-        table_desc = additional_info["description"]
-        important_columns = json.dumps(additional_info["important_columns"], indent=2)
-        schema = json.dumps(table_info, indent=4)
-        context_str = f"{schema}\n\n"  
-        context_str += f"Table description for table '{table_schema_obj.table_name}':\n{table_desc}\n\n"
-        context_str += f"Some important columns and descriptions for table '{table_schema_obj.table_name}':\n{important_columns}\n"
-        context_strs.append(context_str)
-    return "\n\n".join(context_strs)
-
-def retrieve_examples(query: str):
-    chroma_collection = chromadb_connection(collection="sql_examples")
-    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    node_mappings = SimpleObjectNodeMapping.from_objects(EXAMPLES)
-    obj_idx = ObjectIndex.from_objects(
-        EXAMPLES,
-        node_mappings,
-        VectorStoreIndex,
-        storage_context
+    strategy_template = PromptTemplate(STRATEGY_PROMPT)
+    table_parser_component = FnComponent(fn=get_context_string)
+    ex_retriever = FnComponent(fn=retrieve_examples)
+    strategy_prompt = strategy_template.partial_format(
+        dialect=engine.dialect.name
     )
-    retriever = obj_idx.as_retriever(similarity_top_k=3)
-    relavent_examples = retriever.retrieve(query)
-    template = """Example Question: {question}\n
-SQL Query:
-    {sql_query}"""
-    relavent_examples = [
-        template.format(
-            question=example["query"],
-            sql_query=example["passage"]
-        )
-        for example in relavent_examples
-    ]
+
+    qp = QP(
+        modules={
+            "input": InputComponent(),
+            "table_retriever": db_retriever,
+            "examples": ex_retriever,
+            "table_output_parser": table_parser_component,
+            "strategy_prompt": strategy_prompt,
+            "strategy_llm": chat_llm,
+        }
+    )
+    qp.add_chain(["input", "table_retriever", "table_output_parser"])
+    qp.add_chain(["input", "examples"])
+    qp.add_link("input", "strategy_prompt", dest_key="query_str")
+    qp.add_link("table_output_parser", "strategy_prompt", dest_key="schema")
+    qp.add_link("examples", "strategy_prompt", dest_key="examples")
+    qp.add_chain(["strategy_prompt", "strategy_llm"])
     
-    str_examples = "\n\n".join(relavent_examples)
-    return str_examples
+    strategy = qp.run(query=query)
+    return strategy
 
-def sql_parser(response: ChatResponse):
-    """Parse response to SQL."""
-    response = response.message.content
-    check = "select no;"
-    sql_query_start = response.find("SQLQuery:")
-    if sql_query_start != -1:
-        response = response[sql_query_start:]
-        if response.startswith("SQLQuery:"):
-            response = response[len("SQLQuery:") :]
-    sql_result_start = response.find("SQLResult:")
-    if sql_result_start != -1:
-        response = response[:sql_result_start]
-    if response.lower().strip().strip("```").strip() == check:
-        return "SELECT * FROM rx_statistics_charts;"
-    return response.strip().strip("```").strip()
-
-def parse_rows(node):
-    rows = node[0].node.text
-    return rows
-
-def response_parser(response: ChatResponse):
-    response = response.message.content
-    return response
-
-    
-def ask(query: str):
-    chat_llm, _ = llms_clients()
+def query_pipeline(query: str):
     start_time = time.time()
     logger.info("Setting up pipline components")
+    chat_llm, Settings.embed_model = llms_clients_index()
     db_retriever = set_up_database_retriever(
         sql_database=sql_database,
         metadata_obj=metadata_obj,
@@ -243,8 +176,115 @@ def ask(query: str):
     time_taken = time.time() - start_time
     logger.info(f"Time taken to respond:{time_taken}s")
     logger.info(type(response))
+    return response
+
+def set_up_database_retriever(sql_database: SQLDatabase, metadata_obj: MetaData, top_k: int):
+    # creating a vector store
+    chroma_collection = chromadb_connection(collection="sql_tables")
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    # Creating index for each table in database
+    table_node_mapping = SQLTableNodeMapping(sql_database)
+    table_schema_objs = []
+    for table_name in metadata_obj.tables.keys():
+        table = SQLTableSchema(table_name=table_name)
+        table.context_str = REDMINE_TABLES[table_name]["description"]
+        table_schema_objs.append(table)
+        
+    db_index = ObjectIndex.from_objects(
+        table_schema_objs,
+        table_node_mapping,
+        VectorStoreIndex,
+        storage_context
+    )
+    db_retriever = db_index.as_retriever(similarity_top_k=top_k)
+    return db_retriever
+
+def get_context_string(table_data: List[SQLTableSchema]):
+    """
+    The get_context_string function takes a list of SQLTableSchema objects and returns a string.
+    The string is the table context for the tables in the list.
     
-    df = get_qa_with_reference(px.active_session()) 
+    
+    :param table_data: List[SQLTableSchema]: Get the table name
+    :return: A string that contains the table and column description for each of the tables in the query
+    """
+    context_strs = []
+    for table_schema_obj in table_data:
+        # table_info = REDMINE_TABLES[table_schema_obj.table_name]
+        table_info = sql_database.get_single_table_info(
+            table_schema_obj.table_name
+        )
+        additional_info = REDMINE_TABLES[table_schema_obj.table_name]
+        table_desc = additional_info["description"]
+        important_columns = json.dumps(additional_info["important_columns"], indent=2)
+        schema = json.dumps(table_info, indent=4)
+        context_str = f"{schema}\n\n"  
+        context_str += f"Table description for table '{table_schema_obj.table_name}':\n{table_desc}\n\n"
+        context_str += f"Some important columns and descriptions for table '{table_schema_obj.table_name}':\n{important_columns}\n"
+        context_strs.append(context_str)
+    return "\n\n".join(context_strs)
+
+def retrieve_examples(query: str, top_k: int = 3):
+    chroma_collection = chromadb_connection(collection="sql_examples")
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    node_mappings = SimpleObjectNodeMapping.from_objects(EXAMPLES)
+    obj_idx = ObjectIndex.from_objects(
+        EXAMPLES,
+        node_mappings,
+        VectorStoreIndex,
+        storage_context
+    )
+    retriever = obj_idx.as_retriever(similarity_top_k=top_k)
+    relavent_examples = retriever.retrieve(query)
+    template = """Example Question: {question}\n
+SQL Query:
+    {sql_query}"""
+    relavent_examples = [
+        template.format(
+            question=example["query"],
+            sql_query=example["passage"]
+        )
+        for example in relavent_examples
+    ]
+    
+    str_examples = "\n\n".join(relavent_examples)
+    return str_examples
+
+def sql_parser(response: ChatResponse):
+    """Parse response to SQL."""
+    response = response.message.content
+    check = "select no;"
+    sql_query_start = response.find("SQLQuery:")
+    if sql_query_start != -1:
+        response = response[sql_query_start:]
+        if response.startswith("SQLQuery:"):
+            response = response[len("SQLQuery:") :]
+    sql_result_start = response.find("SQLResult:")
+    if sql_result_start != -1:
+        response = response[:sql_result_start]
+    if response.lower().strip().strip("```").strip() == check:
+        return "SELECT * FROM rx_statistics_charts;"
+    return response.strip().strip("```").strip()
+
+def parse_rows(node):
+    rows = node[0].node.text
+    return rows
+
+def response_parser(response: ChatResponse):
+    response = response.message.content
+    return response
+
+    
+def ask(query: str):
+    response = query_pipeline(
+        query=query
+    )
+    # response = strategy_pipeline(
+    #     chat_llm=chat_llm,
+    #     query=query        
+    # )
     # hallucination_eval, qa_correctness_eval = evaluation(queries_df=df, llm=chat_llm)
     # px.Client().log_evaluations(
     #     SpanEvaluations(eval_name="Hallucination", dataframe=hallucination_eval),

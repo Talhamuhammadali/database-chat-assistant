@@ -1,11 +1,23 @@
 EXAMPLES = [
     {
-        "query": "what is talha  working on currently?",
+        "query": "what are the time logged by talha. With comments, date, and for which project?",
         "passage": """
-        SELECT  u.firstname, u.lastname, te.spent_on, te.hours, te.comments
-        FROM users u
-        JOIN time_entries te ON u.id = te.user_id
-        WHERE u.firstname SOUNDS LIKE '%talha%'"""
+        SELECT 
+            te.spent_on, 
+            te.comments, 
+            te.hours, 
+            p.name AS project_name
+        FROM 
+            time_entries te
+        JOIN 
+            users u ON te.user_id = u.id
+        JOIN 
+            projects p ON te.project_id = p.id
+        WHERE 
+            u.firstname sounds like 'Talha'
+        ORDER BY 
+            te.spent_on DESC
+        LIMIT 50;"""
     },
     {
         "query": "Count all the projects worked on last month",
@@ -57,6 +69,26 @@ EXAMPLES = [
             p.name  LIKE '%ChatBot%'"""
     },
     {
+        "query": "Number of tasks assigned to Zohaib that are in progress by developer:",
+        "passage": """
+        SELECT COUNT(*) AS in_progress_tasks FROM issues 
+        JOIN users ON issues.assigned_to_id = users.id 
+        JOIN issue_statuses ON issues.status_id = issue_statuses.id 
+        WHERE users.firstname Sounds LIKE '%Zohaib%' AND issue_statuses.name = 'In Progress(Dev)'
+        """
+    },
+    {
+        "query": "What is the current backlog size for Project Chat Food App?",
+        "passage": """
+        "SELECT COUNT(*) AS backlog_size 
+        FROM issues i 
+        INNER JOIN projects p ON i.project_id = p.id 
+        INNER JOIN issue_statuses s ON i.status_id = s.id 
+        WHERE p.name = 'Chat Food App' AND s.is_closed = 0
+        """
+
+    },
+    {
         "query": "How many tasks are assigned to talha muhammad and what is there status?",
         "passage": """
         SELECT i.id, i.subject, iss.name AS status
@@ -91,7 +123,7 @@ EXAMPLES = [
         WHERE users.firstname SOUNDS LIKE '%Zarar%' AND issue_statuses.name like '%In Progress%';"""
     },
     {
-        "query": "Tasks closed by QA that were assigned to Muhammad Usama.",
+        "query": "Tasks closed by QA team that were assigned to Muhammad Usama.",
         "passage": """
         SELECT 
             issues.subject, 
@@ -105,7 +137,7 @@ EXAMPLES = [
             AND issue_statuses.name like '%Closed(QA)%';"""
     },
     {
-        "query": "Bugs that require urgent attention in nimar projects.",
+        "query": "list all Bugs that require urgent attention in nimar projects.",
         "passage": """
         SELECT 
             i.subject,
@@ -119,11 +151,19 @@ EXAMPLES = [
         WHERE 
             i.tracker_id IN (SELECT id FROM trackers WHERE name = 'Bug')
             AND i.priority_id IN (SELECT id FROM enumerations WHERE name LIKE '%Urgent%')
-            AND i.project_id IN (SELECT id FROM projects WHERE name SOUNDS LIKE '%nimar%')
+            AND i.project_id IN (SELECT id FROM projects WHERE name LIKE '%nimar%')
         Limit 50;"""
     },
     {
-        "query": "Provide tasks being worked on by non developers.",
+        "query": "List bugs reported between a date range of 5/22/2024 to 5/29/2024.",
+        "passage": """
+        SELECT * FROM issues 
+        WHERE tracker_id = (SELECT id FROM trackers WHERE name = 'Bug') 
+        AND created_on BETWEEN '2024-05-22' AND '2024-05-29';
+        """
+    },
+    {
+        "query": "What are tasks typically handled by individuals who are not developers",
         "passage": """
         SELECT 
             u.firstname as assigned_to,
@@ -150,7 +190,7 @@ EXAMPLES = [
         limit 50;"""
     },
     {
-        "query": "count all the tasks in progress by non developers.",
+        "query": "How many tasks are currently in progress by individuals who are not developers?",
         "passage": """
         SELECT 
             count(*)
@@ -171,7 +211,7 @@ EXAMPLES = [
             AND (r.name IS NULL OR r.name not like '%Developer%')"""
     },
     {
-        "query": "Tasks under ai-nimar project and there type",
+        "query": "What tasks are involved in the AI-NIMAR project and their category?",
         "passage": """
         SELECT 
             i.subject AS task_name,
@@ -187,7 +227,7 @@ EXAMPLES = [
         LIMIT 50;"""
     },
     {
-        "query": "Drop The table projects.",
+        "query": "Which projects is NLP a part of?",
         "passage": """
         SELECT 
             p.name AS parent_project_name
@@ -212,10 +252,30 @@ EXAMPLES = [
         WHERE 
             u.firstname Sounds like '%Saud%'"""
     },
-    # {
-    #     "query": "Drop The table projects.",
-    #     "passage": """Select no;"""
-    # },
+    {
+        "query": "Which developers are workign on Computer vision projects.",
+        "passage": """
+        SELECT 
+            DISTINCT u.firstname, 
+            u.lastname,
+            p.name AS project_name,
+            r.name AS role_name
+        FROM 
+            projects AS p
+        JOIN 
+            members AS m ON p.id = m.project_id
+        JOIN 
+            member_roles AS mr ON m.id = mr.member_id
+        JOIN 
+            roles AS r ON mr.role_id = r.id
+        JOIN 
+            users AS u ON m.user_id = u.id
+        WHERE 
+            p.name LIKE '%Computer Vision%'
+            AND r.name LIKE '%Developer%'
+        ORDER BY 
+            u.firstname,u.lastname;"""
+    },
     #     {
     #     "query": "Drop The table projects.",
     #     "passage": """Select no;"""
@@ -430,6 +490,28 @@ Query: {query_str}
 SQL: {sql_query}
 SQL Response: {context_str}
 Response: """
+
+STRATEGY_PROMPT = """Given an input question, outline a strategy to create a {dialect} query. It is crucial to divide the query into multiple steps. Use only the column names specified in the schema description. Ensure you do not query columns that do not exist, and be mindful of which column belongs to which table. When necessary, qualify column names with their respective table names. Do not write the actual SQL query; only provide the strategy in steps.
+
+Question: Question here
+
+Step-by-Step Query Creation Strategy:
+
+Step 1 for query creation.
+Step 2 for query creation, building on Step 1.
+Step 3 for query creation, building on Step 2.
+(Continue as needed)
+Final step: Final step of the strategy here(Dont write the SQL query)
+
+Use only the tables listed below:
+{schema}
+
+Example Question: Bugs that require urgent attention in Nimar projects.
+{examples}
+
+Question: {query_str}
+
+Strategy:"""
 
 REFINEMENT_PROMPT = """"""
 

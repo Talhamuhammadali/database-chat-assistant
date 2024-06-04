@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
 from app.llamaIndex.llamaIndexAgent import ask
+from app.chat_bot import ask_lang
 
 app = FastAPI(
     title="Assistant-api"
@@ -17,4 +18,10 @@ async def root():
 @app.post("/ask")
 async def ask_llama(request: userInput):
     response = ask(query=request.question)
+    return response
+
+
+@app.post("/ask/lang")
+async def ask_llama(request: userInput):
+    response = ask_lang(query=request.question)
     return response

@@ -24,4 +24,6 @@ class KnowledgeBase(BaseModel):
     summery: str = Field(description="Discussion Summery of the conversation.")
     open_problems: str = Field(description="Current problem you are facing that is required to solve user question.")
     
-
+class GetInfo(BaseModel):
+    """Model for inpit arguments of get info function"""
+    question: str = Field(description="The users questions in natural language with detail.")
