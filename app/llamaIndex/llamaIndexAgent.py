@@ -38,7 +38,7 @@ from sqlalchemy import (
 )
 from app.telementry import instrument
 from app.llamaIndex.eval_query import evaluation
-from app.llamaIndex.db_utils import (
+from app.llamaIndex.llamaIndex_utils import (
     REDMINE_TABLES,
     EXAMPLES, 
     TEXT_TO_SQL_PROMPT,

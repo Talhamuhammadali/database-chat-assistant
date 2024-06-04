@@ -31,11 +31,8 @@ def chromadb_connection(collection: str):
 
 def mysql_connection():
     pws = quote_plus(MYSQL_PASS)
-    connection_string = f"mysql+pymysql://{MYSQL_USER}:%s@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"%quote_plus(MYSQL_PASS)
-    print(connection_string)
-    engine = create_engine(url=connection_string)
-    
-    connection = engine.connect()   
+    connection_string = f"mysql+pymysql://{MYSQL_USER}:%s@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"%pws
+    engine = create_engine(url=connection_string) 
     return engine
 
 def sqlite_connection():
