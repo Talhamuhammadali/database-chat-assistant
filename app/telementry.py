@@ -1,14 +1,15 @@
 from openinference.instrumentation.llama_index import LlamaIndexInstrumentor
+from openinference.instrumentation.langchain import LangChainInstrumentor 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk import trace as trace_sdk
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-
-
+from app.utils.settings import PHOENIX_COLLECTOR_ENDPOINT
 def instrument():
     tracer_provider = trace_sdk.TracerProvider()
-    span_exporter = OTLPSpanExporter("http://phoenix:6006/v1/traces")
+    span_exporter = OTLPSpanExporter(PHOENIX_COLLECTOR_ENDPOINT+"/v1/traces")
     span_processor = SimpleSpanProcessor(span_exporter)
     tracer_provider.add_span_processor(span_processor)
     trace_api.set_tracer_provider(tracer_provider)
-    LlamaIndexInstrumentor().instrument()
+    LlamaIndexInstrumentor().instrument(tracer_provider=tracer_provider)
+    LangChainInstrumentor().instrument(tracer_provider=tracer_provider)
