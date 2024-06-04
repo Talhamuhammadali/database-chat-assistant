@@ -18,3 +18,4 @@ MYSQL_PORT=3306
 MYSQL_DB="redmine"
 # API keys
 GROQ_API_KEY="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"
+NVIDIA_API_KEY = "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"
