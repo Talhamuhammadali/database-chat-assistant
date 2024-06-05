@@ -33,5 +33,8 @@ async def ask_llama(request: userInput):
 
 @app.post("/ask/agent")
 async def ask_llama(request: userInput):
-    response = adaptive_agent()
+    response = adaptive_agent(
+        user_question=request.question,
+        chat_history=request.chat_history
+    )
     return 0
