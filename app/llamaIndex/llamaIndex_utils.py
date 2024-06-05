@@ -74,7 +74,7 @@ EXAMPLES = [
         SELECT COUNT(*) AS in_progress_tasks FROM issues 
         JOIN users ON issues.assigned_to_id = users.id 
         JOIN issue_statuses ON issues.status_id = issue_statuses.id 
-        WHERE users.firstname Sounds LIKE '%Zohaib%' AND issue_statuses.name = 'In Progress(Dev)'
+        WHERE users.firstname Sounds LIKE '%Zohaib%' AND issue_statuses.name LIKE '%In Progress(Dev)%'
         """
     },
     {
@@ -84,7 +84,7 @@ EXAMPLES = [
         FROM issues i 
         INNER JOIN projects p ON i.project_id = p.id 
         INNER JOIN issue_statuses s ON i.status_id = s.id 
-        WHERE p.name = 'Chat Food App' AND s.is_closed = 0
+        WHERE p.name like '%Chat Food App%' AND s.is_closed = 0
         """
 
     },
@@ -110,7 +110,7 @@ EXAMPLES = [
         "passage": """ 
         SELECT COUNT(*) AS reported_bugs
         FROM issues
-        WHERE tracker_id = (SELECT id FROM trackers WHERE name = 'Bug')
+        WHERE tracker_id = (SELECT id FROM trackers WHERE name like '%Bug%')
         AND created_on >= DATE_SUB(DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'), INTERVAL QUARTER(CURRENT_DATE) - 1 QUARTER);"""
     },
     {
@@ -158,7 +158,7 @@ EXAMPLES = [
         "query": "List bugs reported between a date range of 5/22/2024 to 5/29/2024.",
         "passage": """
         SELECT * FROM issues 
-        WHERE tracker_id = (SELECT id FROM trackers WHERE name = 'Bug') 
+        WHERE tracker_id = (SELECT id FROM trackers WHERE name like '%Bug%') 
         AND created_on BETWEEN '2024-05-22' AND '2024-05-29';
         """
     },
@@ -253,7 +253,7 @@ EXAMPLES = [
             u.firstname Sounds like '%Saud%'"""
     },
     {
-        "query": "Which developers are workign on Computer vision projects.",
+        "query": "Find developers that are working on Computer vision projects.",
         "passage": """
         SELECT 
             DISTINCT u.firstname, 
@@ -272,9 +272,54 @@ EXAMPLES = [
             users AS u ON m.user_id = u.id
         WHERE 
             p.name LIKE '%Computer Vision%'
-            AND r.name LIKE '%Developer%'
+            AND r.name Sounds LIKE '%Developer%'
         ORDER BY 
             u.firstname,u.lastname;"""
+    },
+    {
+        "query": "What bugs reported by Wajeeh are still unresolved?",
+        "passage": """
+        SELECT 
+            author.firstname AS author_firstname,
+            author.lastname AS author_lastname,
+            assignee.firstname AS assigned_firstname,
+            assignee.lastname AS assigned_lastname,
+            i.subject AS bug_subject,
+            i.description AS bug_description,
+            i.created_on AS reported_date,
+            s.name AS status
+        FROM 
+            issues AS i
+        JOIN 
+            users AS author ON i.author_id = author.id
+        JOIN 
+            users AS assignee ON i.assigned_to_id = assignee.id
+        JOIN 
+            trackers AS t ON i.tracker_id = t.id
+        JOIN 
+            issue_statuses AS s ON i.status_id = s.id
+        WHERE 
+            author.firstname Sounds LIKE '%Wajeeh%'
+            AND t.name LIKE '%Bug%'
+            AND s.is_closed = 0
+        ORDER BY 
+            i.created_on DESC
+        LIMIT 25;"""
+    },
+    {
+        "query": "Child/sub projects in computer vision project",
+        "passage": """
+        SELECT 
+            p2.name AS sub_project_name,
+            p2.description AS sub_project_description
+        FROM 
+            projects AS p1
+        JOIN 
+            projects AS p2 ON p1.id = p2.parent_id
+        WHERE 
+            p1.name LIKE '%Computer Vision%'
+        ORDER BY 
+            p2.name;"""
     },
     #     {
     #     "query": "Drop The table projects.",

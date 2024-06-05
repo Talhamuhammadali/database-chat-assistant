@@ -44,7 +44,7 @@ def sqlite_connection():
 def llms_clients_index(temp: float = 0.3):
     
     api_key=GROQ_API_KEY
-    chat_llm = Groq(model="llama3-8b-8192",
+    chat_llm = Groq(model="llama3-70b-8192",
     api_key=api_key,
     temperature=temp
     )
@@ -58,7 +58,7 @@ def llms_clients_index(temp: float = 0.3):
 def llms_clients_lang(temp: float = 0.3):
     
     api_key=GROQ_API_KEY
-    chat_llm = ChatGroq(model="llama3-8b-8192",
+    chat_llm = ChatGroq(model="llama3-70b-8192",
     api_key=api_key,
     temperature=temp
     )
