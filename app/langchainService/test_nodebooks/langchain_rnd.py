@@ -2,6 +2,7 @@ import json
 import logging
 import time
 from langchain import hub
+from langchain_community.utilities import SQLDatabase
 from langchain.agents import Tool
 from langchain.agents import AgentExecutor, create_structured_chat_agent
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
