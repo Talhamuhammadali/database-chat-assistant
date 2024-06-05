@@ -3,6 +3,8 @@ from pydantic import BaseModel
 import uvicorn
 from app.llamaIndex.llamaIndexAgent import ask
 from app.chat_bot import ask_lang
+from app.langchainService.adaptive_RAG import adaptive_agent
+from typing import Optional
 
 app = FastAPI(
     title="Assistant-api"
@@ -10,6 +12,8 @@ app = FastAPI(
 
 class userInput(BaseModel):
     question: str
+    chat_history: Optional[list]
+    
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -25,3 +29,9 @@ async def ask_llama(request: userInput):
 async def ask_llama(request: userInput):
     response = ask_lang(query=request.question)
     return response
+
+
+@app.post("/ask/agent")
+async def ask_llama(request: userInput):
+    response = adaptive_agent()
+    return 0

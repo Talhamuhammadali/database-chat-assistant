@@ -11,11 +11,11 @@ from llama_index.llms.nvidia_triton import NvidiaTriton
 from langchain_groq import ChatGroq
 from langchain_nvidia_trt.llms import TritonTensorRTLLM
 from app.utils.settings import (
-    POSTGRES_HOST,
-    POSTGRES_DATABASE,
-    POSTGRES_USER,
-    POSTGRES_PASSWORD,
-    POSTGRES_PORT,
+    POSTGRES_STT_HOST,
+    POSTGRES_STT_DATABASE,
+    POSTGRES_STT_USER,
+    POSTGRES_STT_PASSWORD,
+    POSTGRES_STT_PORT,
     MYSQL_USER,
     MYSQL_PASS,
     MYSQL_HOST,
