@@ -1,5 +1,13 @@
-from typing import Literal
+import operator
+from typing import (
+    Any,
+    Literal,
+    Annotated,
+    Sequence,
+    TypedDict
+)
 from langchain.pydantic_v1 import BaseModel, Field, validator
+from langchain_core.messages import BaseMessage
 class Conversation:
     def __init__(self):
         self.conversation_history = []
@@ -27,3 +35,4 @@ class KnowledgeBase(BaseModel):
 class GetInfo(BaseModel):
     """Model for inpit arguments of get info function"""
     question: str = Field(description="The users questions in natural language with detail.")
+    
