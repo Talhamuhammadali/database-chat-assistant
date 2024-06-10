@@ -536,8 +536,7 @@ SQL: {sql_query}
 SQL Response: {context_str}
 Response: """
 
-STRATEGY_PROMPT = """Given an input question, outline a strategy to create a {dialect} query. It is crucial to divide the query into multiple steps. Use only the column names specified in the schema description. Ensure you do not query columns that do not exist, and be mindful of which column belongs to which table. When necessary, qualify column names with their respective table names. Do not write the actual SQL query; only provide the strategy in steps.
-
+STRATEGY_PROMPT = """Given an input question, outline a strategy to create a {dialect} SQL query. It is crucial to divide the query into multiple steps. Use only the column names specified in the schema description. Ensure you do not query columns that do not exist, and be mindful of which column belongs to which table. When necessary, qualify column names with their respective table names. Do not write the actual SQL query; only provide the strategy in steps.
 Question: Question here
 
 Step-by-Step Query Creation Strategy:
@@ -551,13 +550,10 @@ Final step: Final step of the strategy here(Dont write the SQL query)
 Use only the tables listed below:
 {schema}
 
-Example Question: Bugs that require urgent attention in Nimar projects.
+Example Question:
 {examples}
 
 Question: {query_str}
 
 Strategy:"""
 
-REFINEMENT_PROMPT = """"""
-
-RETRY_PROMPT = """"""
