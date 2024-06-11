@@ -1,7 +1,6 @@
 import time
 import json
 import logging
-import phoenix as px
 from phoenix.trace import SpanEvaluations
 from phoenix.session.evaluation import (
     get_qa_with_reference,

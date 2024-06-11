@@ -18,7 +18,6 @@ from langchain_core.tools import tool
 from langgraph.prebuilt import ToolNode
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.output_parsers.openai_functions import JsonOutputFunctionsParser
-from langchain_nvidia_ai_endpoints import ChatNVIDIA
 from langchain_nvidia_trt.llms import TritonTensorRTLLM
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
@@ -51,10 +50,12 @@ from app.utils.connections import (
     mysql_connection,
     llms_clients_lang
 )
+from app.langchainService.database_retriver import get_table_context
+
+
 logging.basicConfig(level="INFO")
 logger = logging.getLogger("Multi-Agent-Db-Assistant")
 llm = llms_clients_lang()
-
 
 class AgentState(TypedDict):
     task: str
@@ -146,13 +147,14 @@ def adaptive_agent(user_question: str, chat_history: list):
     builder.add_conditional_edges(
         "supervisor",
         condition_check,
-        {"FINISH": "assistant", "planner": "planner"}
+        {
+            "FINISH": "assistant",
+            "planner": "planner",
+            "sql coder": "sql coder",
+            "evaluator": "evaluator"
+        }
     )
-    builder.add_conditional_edges(
-        "planner",
-        condition_check,
-        {"FINISH": "assistant"}
-    )
+    builder.add_edge("planner","supervisor")
     # builder.add_edge("assistant", "generate")
     builder.set_entry_point("assistant")
     graph = builder.compile(checkpointer=memory)
