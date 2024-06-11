@@ -36,3 +36,57 @@ class GetInfo(BaseModel):
     """Model for inpit arguments of get info function"""
     question: str = Field(description="The users questions in natural language with detail.")
     
+
+# class Agent:
+#     def __init__(
+#         self,
+#         llm,
+#         checkpointer,
+#         tools=[],
+#         system=""
+#     ):
+#         self.llm = llm
+#         self.system = system
+#         graph = StateGraph(AgentState)
+#         graph.add_node("llm", self.ask_llm)
+#         graph.add_node("action", self.take_actions)
+#         graph.add_conditional_edges(
+#             "llm",
+#             self.check_tool_calls,
+#             {True: "action", False: END}
+#         )
+#         graph.add_edge("action", "llm")
+#         graph.set_entry_point("llm")
+#         self.graph = graph.compile(checkpointer=checkpointer)
+#         self.tools = {t.name: t for t in tools}
+#         self.model = llm.bind_tools(tools)
+    
+#     def check_tool_calls(self, state: AgentState):
+#         last_message = state["chat_history"][-1]
+#         action_re = re.compile('^Action: (\w+): (.*)$') 
+#         actions = [
+#             action_re.match(action) for action in
+#             last_message.split("\n") if action_re.match(action)
+#         ]
+#         if actions:
+#             print(True)
+#             return True
+#         else:
+#             print(False)
+#             return False
+        
+#     def take_actions(self, state: AgentState):
+#         return 0 
+    
+#     def ask_llm(self, state: AgentState):
+#         # messages = state["chat_history"]
+#         messages = []
+#         if self.system:
+#             messages = [
+#                 SystemMessage(
+#                     content=self.system
+#                 )
+#             ] + messages
+#         response = self.llm.invoke(messages)
+#         return {"chat_history": response}
+    

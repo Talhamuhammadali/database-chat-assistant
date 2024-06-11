@@ -10,7 +10,7 @@ from langchain_nvidia_trt.llms import TritonTensorRTLLM
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from app.langchainService.prompts import (
+from app.langchainService.test_nodebooks.ex_prompts import (
     CHOICE_PROMPT,
     SYSTEM_PROMPT,
     FIRST_STEP_PROMPT,

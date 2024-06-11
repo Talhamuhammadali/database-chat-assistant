@@ -13,7 +13,6 @@ from llama_index.core import (
     Settings,
     SQLDatabase,
     VectorStoreIndex,
-    SimpleDirectoryReader,
     StorageContext,
 )
 from llama_index.vector_stores.chroma import ChromaVectorStore
