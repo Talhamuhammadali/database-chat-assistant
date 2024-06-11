@@ -13,6 +13,7 @@ Final Answer Rules:
 6. If a question is ambiguous, politely request clarification from the user.
 7. When calling tool, always pass the user question , as it is, to the tool.
 8. Make the response readble using line breaks and highlights.
+9. Donot summerize.
 
 TOOLS:
 ------

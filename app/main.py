@@ -4,6 +4,7 @@ import uvicorn
 from app.llamaIndex.llamaIndexAgent import ask
 from app.chat_bot import ask_lang
 from app.langchainService.adaptive_RAG import adaptive_agent
+from app.langchainService.database_retriver import test_retrival
 from typing import Optional
 
 app = FastAPI(
@@ -28,13 +29,14 @@ async def ask_llama(request: userInput):
 @app.post("/ask/lang")
 async def ask_llama(request: userInput):
     response = ask_lang(query=request.question)
-    return response
+    return response["output"]
 
 
 @app.post("/ask/agent")
 async def ask_llama(request: userInput):
-    response = adaptive_agent(
-        user_question=request.question,
-        chat_history=request.chat_history
-    )
-    return 0
+    # response = adaptive_agent(
+    #     user_question=request.question,
+    #     chat_history=request.chat_history
+    # )
+    response = test_retrival()
+    return response
