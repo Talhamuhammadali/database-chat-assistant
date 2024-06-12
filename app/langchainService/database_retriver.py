@@ -1,7 +1,6 @@
 import logging
 import json
 from typing import List
-from langchain_community.utilities import SQLDatabase as Lang_db
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core import (
@@ -56,8 +55,7 @@ def get_context_string(llama_db: Llama_db, table_data: List[SQLTableSchema]):
         table_info = llama_db.get_single_table_info(
             table_schema_obj.table_name
         )
-        sample_rows = llama_db.run_sql(f"select * from {table_schema_obj.table_name} limit 3")
-        logger.info(sample_rows)
+        sample_rows = llama_db.run_sql(f"select * from {table_schema_obj.table_name} limit 2")
         additional_info = REDMINE_DATABASE[table_schema_obj.table_name]
         table_desc = additional_info["description"]
         important_columns = json.dumps(additional_info["important_columns"], indent=2)
@@ -97,15 +95,12 @@ SQL Query:
     return str_examples
 
 def get_table_context(query: str):
+    logger.info("Getting Relevant Tables and Examples")
     embediing_model = HuggingFaceEmbedding(model_name='intfloat/e5-base-v2')
     Settings.embed_model=embediing_model
     engine = mysql_connection()
     tables = [*REDMINE_DATABASE.keys()]
     logger.info("Getting examples and table context")
-    lang_db = Lang_db(
-       engine=engine,
-       include_tables=tables
-    )
     llama_db = Llama_db(engine)
     metadata_obj = MetaData()
     metadata_obj.reflect(bind=engine, only=tables)
@@ -120,4 +115,8 @@ def get_table_context(query: str):
         table_data=selected_tables
     )
     examples_str = retrieve_examples(query=query, top_k=3)
-    return {"table_context":table_context, "examples": examples_str}
+    return {
+        "table_context":table_context,
+        "examples": examples_str,
+        "dialect": engine.dialect.name
+    }

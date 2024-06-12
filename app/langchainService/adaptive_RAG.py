@@ -1,4 +1,3 @@
-import json
 import re
 import logging
 import operator
@@ -15,6 +14,7 @@ from typing import (
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langchain_community.utilities import SQLDatabase
 from langchain_core.tools import tool
+from langchain_core.pydantic_v1 import Field
 from langgraph.prebuilt import ToolNode
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.output_parsers.openai_functions import JsonOutputFunctionsParser
@@ -41,15 +41,7 @@ from langchain_core.messages import (
 )
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import AnyMessage, add_messages
-from app.utils.db_info import(
-    REDMINE_DATABASE,
-    REDMINE_EXAMPLES
-)
-from app.utils.connections import (
-    chromadb_connection,
-    mysql_connection,
-    llms_clients_lang
-)
+from app.utils.connections import llms_clients_lang, mysql_connection
 from app.langchainService.database_retriver import get_table_context
 
 
@@ -58,14 +50,17 @@ logger = logging.getLogger("Multi-Agent-Db-Assistant")
 llm = llms_clients_lang()
 
 class AgentState(TypedDict):
-    task: str
-    strategy: str
-    sql_queries: list[str]
-    evaluation: str
-    max_revision: int
-    revision_number: int
-    messages: Annotated[Sequence[AnyMessage], operator.add]    
-    step: str
+    task: str = Field(description="Task that requires sql query")
+    strategy: str = Field(description="Strategy required to construct an SQL query.")
+    sql_queries: str = Field(description="List of SQL queries that can achive the task")
+    evaluation: str = Field(description="Evaluating the sql queries based on task and data retrieved")
+    max_revisions: int = Field(description="Max revisions possible")
+    revision_number: int = Field(description="Current Revision")
+    dialect: str = Field(description="Name of the SQL dialect to query from")
+    table_info: str = Field(description="Relevant tables information: create table, sample rows, descriptions")
+    examples: str = Field(description="Relevant examples")
+    messages: Annotated[Sequence[AnyMessage], operator.add] = Field(description="TODO")
+    step: str = Field(description="Current step the SQL process is on")
     
 
 def assistant_node(state: AgentState):
@@ -93,25 +88,53 @@ def supervisor_node(state: AgentState):
     
     messages = [system, user]
     response = llm.invoke(messages)
-    print(response)
     return {
         "step": response.content
     }
 
 def planner_node(state: AgentState):
-    engine = mysql_connection()
-    db = SQLDatabase(
-       engine=engine,
-       include_tables=[*REDMINE_DATABASE.keys()]
+    logger.info("Planning phase for the query")
+    context = get_table_context(query=state["task"])
+    system = SystemMessage(
+        content=PLANNER_SYSTEM_PROMPT
     )
-    logger.info(db.get_usable_table_names())
+    user = HumanMessage(
+        content=PLANNER_GENERATION_PROMPT.format(
+            table_info=context.get("table_info", ""),
+            examples=context.get("examples", ""),
+            task=state["task"]
+        )
+    )
+    messages = [system, user]
+    response = llm.invoke(messages)
     return {
-        "step": "sql coder",
-        "strategy" : "This isnt possible"
+        "step": "planning completed",
+        "table_info": context.get("table_context", ""),
+        "examples": context.get("examples", ""),
+        "strategy" : response.content,
+        "dialect": context.get("dialect", "")
     }
 
 def sql_node(state: AgentState):
-    return 0
+    logger.info("Generating the SQL query")
+    system = SystemMessage(content = SQL_SYSTEM_PROMPT)
+    user = HumanMessage(
+        content=SQL_GENERATION_PROMPT.format(
+            dialect=state["dialect"],
+            table_info=state["table_info"],
+            strategy=state["strategy"],
+            # examples=state["examples"],
+            task=state["task"],
+        )
+    )
+    messages = [system, user]
+    response = llm.invoke(messages)
+    ai_response = AIMessage(content=response.content)
+    messages.extend(ai_response)
+    return {
+        "sql_queries": response.content,
+        "messages": messages
+    }
 
 def evaluator_node(state: AgentState):
     return 0
@@ -121,7 +144,7 @@ def condition_check(state: AgentState):
         return "supervisor"
     if state["step"] == "planner":
         return "planner"
-    if state["step"] == "sql coder":
+    if state["step"] == "sql":
         return "sql coder"
     if state["step"] == "evaluator":
         return "evaluator"
@@ -137,7 +160,7 @@ def adaptive_agent(user_question: str, chat_history: list):
     builder.add_node("assistant", assistant_node)
     builder.add_node("supervisor", supervisor_node)
     builder.add_node("planner", planner_node)
-    # builder.add_node("sql coder", sql_node)
+    builder.add_node("sql coder", sql_node)
     # builder.add_node("evaluator", evaluator_node)
     builder.add_conditional_edges(
         "assistant",
@@ -151,11 +174,12 @@ def adaptive_agent(user_question: str, chat_history: list):
             "FINISH": "assistant",
             "planner": "planner",
             "sql coder": "sql coder",
-            "evaluator": "evaluator"
+            # "evaluator": "evaluator"
         }
     )
     builder.add_edge("planner","supervisor")
-    # builder.add_edge("assistant", "generate")
+    builder.add_edge("sql coder","supervisor")
+    # builder.add_edge("planner","supervisor")
     builder.set_entry_point("assistant")
     graph = builder.compile(checkpointer=memory)
     # creating conversation thread
