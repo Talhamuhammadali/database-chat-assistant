@@ -30,7 +30,9 @@ from app.langchainService.prompts import (
     PLANNER_SYSTEM_PROMPT,
     PLANNER_GENERATION_PROMPT,
     SQL_SYSTEM_PROMPT,
-    SQL_GENERATION_PROMPT
+    SQL_GENERATION_PROMPT,
+    EVALUATION_SYSTEM_PROMPT,
+    EVALUATION_PROMPT
 )
 from langchain_core.messages import (
     BaseMessage,
@@ -41,8 +43,8 @@ from langchain_core.messages import (
 )
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import AnyMessage, add_messages
-from app.utils.connections import llms_clients_lang, mysql_connection
-from app.langchainService.database_retriver import get_table_context
+from app.utils.connections import llms_clients_lang
+from app.langchainService.database_retriver import get_table_context, execute_query
 
 
 logging.basicConfig(level="INFO")
@@ -52,7 +54,7 @@ llm = llms_clients_lang()
 class AgentState(TypedDict):
     task: str = Field(description="Task that requires sql query")
     strategy: str = Field(description="Strategy required to construct an SQL query.")
-    sql_queries: str = Field(description="List of SQL queries that can achive the task")
+    sql_query: str = Field(description="SQL query that can achive the task")
     evaluation: str = Field(description="Evaluating the sql queries based on task and data retrieved")
     max_revisions: int = Field(description="Max revisions possible")
     revision_number: int = Field(description="Current Revision")
@@ -129,15 +131,38 @@ def sql_node(state: AgentState):
     )
     messages = [system, user]
     response = llm.invoke(messages)
-    ai_response = AIMessage(content=response.content)
-    messages.extend(ai_response)
+    content = response.content
+    if content:
+        sql_query_start = content.find("SQLQuery:")
+        if sql_query_start != -1:
+            sql = content[sql_query_start:]
+            if sql.startswith("SQLQuery:"):
+                sql = sql[len("SQLQuery:") :]
+        sql_result_start = sql.find("SQLResult:")
+        if sql_result_start != -1:
+            sql = sql[:sql_result_start]
+            sql = sql.replace("```", "").strip()
+            
     return {
-        "sql_queries": response.content,
-        "messages": messages
+        "sql_query": sql
     }
 
 def evaluator_node(state: AgentState):
-    return 0
+    rows = execute_query(sql_query=state["sql_query"])
+    system = SystemMessage(content=EVALUATION_SYSTEM_PROMPT)
+    user = HumanMessage(
+        content=EVALUATION_PROMPT.format(
+            task=state["task"],
+            sql=state["sql_query"],
+            rows=rows,
+        )
+    )
+    messages = [system, user]
+    evaluation = llm.invoke(messages)
+    return {
+        "evaluation": evaluation.content,
+        "revision_number": state.get('revision_number', 0)+1
+    }
 
 def condition_check(state: AgentState):
     if state["step"] == "supervisor":
@@ -161,7 +186,7 @@ def adaptive_agent(user_question: str, chat_history: list):
     builder.add_node("supervisor", supervisor_node)
     builder.add_node("planner", planner_node)
     builder.add_node("sql coder", sql_node)
-    # builder.add_node("evaluator", evaluator_node)
+    builder.add_node("evaluator", evaluator_node)
     builder.add_conditional_edges(
         "assistant",
         condition_check,
@@ -174,12 +199,12 @@ def adaptive_agent(user_question: str, chat_history: list):
             "FINISH": "assistant",
             "planner": "planner",
             "sql coder": "sql coder",
-            # "evaluator": "evaluator"
+            "evaluator": "evaluator"
         }
     )
     builder.add_edge("planner","supervisor")
     builder.add_edge("sql coder","supervisor")
-    # builder.add_edge("planner","supervisor")
+    builder.add_edge("evaluator","supervisor")
     builder.set_entry_point("assistant")
     graph = builder.compile(checkpointer=memory)
     # creating conversation thread

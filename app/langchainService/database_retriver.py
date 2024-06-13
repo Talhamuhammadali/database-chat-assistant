@@ -27,6 +27,10 @@ from sqlalchemy import MetaData
 logging.basicConfig(level="INFO")
 logger = logging.getLogger("langchain database retriever")
 
+embediing_model = HuggingFaceEmbedding(model_name='intfloat/e5-base-v2')
+Settings.embed_model=embediing_model
+engine = mysql_connection()
+
 def set_up_database_retriever(sql_database: Llama_db, metadata_obj: MetaData, top_k: int):
     # creating a vector store
     chroma_collection = chromadb_connection(collection="sql_tables")
@@ -96,9 +100,6 @@ SQL Query:
 
 def get_table_context(query: str):
     logger.info("Getting Relevant Tables and Examples")
-    embediing_model = HuggingFaceEmbedding(model_name='intfloat/e5-base-v2')
-    Settings.embed_model=embediing_model
-    engine = mysql_connection()
     tables = [*REDMINE_DATABASE.keys()]
     logger.info("Getting examples and table context")
     llama_db = Llama_db(engine)
@@ -120,3 +121,8 @@ def get_table_context(query: str):
         "examples": examples_str,
         "dialect": engine.dialect.name
     }
+    
+def execute_query(sql_query: str):
+    llama_db = Llama_db(engine)
+    rows = llama_db.run_sql(sql_query)
+    return rows
