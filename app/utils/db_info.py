@@ -121,22 +121,22 @@ REDMINE_DATABASE = {
             {"related_table": "users", "relation": "Many-to-One", "key": "user_id", "related_key": "id"}
         ]
     },
-    "attachments": {
-        "description": "Stores file attachments associated with issues or other entities in Redmine, such as documents, images, or screenshots.",
-        "important_columns": [
-            {"name": "id", "description": "Unique identifier for each attachment."},
-            {"name": "container_id", "description": "ID of the entity the attachment belongs to."},
-            {"name": "container_type", "description": "Type of the entity the attachment belongs to."},
-            {"name": "filename", "description": "Name of the attached file."},
-            {"name": "disk_filename", "description": "Name of the file on disk."},
-            {"name": "filesize", "description": "Size of the attached file."}
-        ],
-        "relationships": [
-            {"related_table": "issues", "relation": "Many-to-One", "key": "container_id", "related_key": "id", "condition": "container_type='Issue'"}
-        ]
-    },
+    # "attachments": {
+    #     "description": "Stores file attachments associated with issues or other entities in Redmine, such as documents, images, or screenshots.",
+    #     "important_columns": [
+    #         {"name": "id", "description": "Unique identifier for each attachment."},
+    #         {"name": "container_id", "description": "ID of the entity the attachment belongs to."},
+    #         {"name": "container_type", "description": "Type of the entity the attachment belongs to."},
+    #         {"name": "filename", "description": "Name of the attached file."},
+    #         {"name": "disk_filename", "description": "Name of the file on disk."},
+    #         {"name": "filesize", "description": "Size of the attached file."}
+    #     ],
+    #     "relationships": [
+    #         {"related_table": "issues", "relation": "Many-to-One", "key": "container_id", "related_key": "id", "condition": "container_type='Issue'"}
+    #     ]
+    # },
     "enumerations": {
-        "description": "Contains various enumerations used throughout Redmine, such as issue priorities, time entry activities, and custom field formats.",
+        "description": "Contains various enumerations used throughout Redmine, such as priorities, time entry activities, and custom field formats.",
         "important_columns": [
             {"name": "id", "description": "Unique identifier for each enumeration."},
             {"name": "name", "description": "Name of the enumeration."},

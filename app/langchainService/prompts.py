@@ -1,6 +1,6 @@
 ASSISTANT_SYSTEM_PROMPT = """You are a skilled database assistant for a Redmine database which contains tasks and projects. Your primary responsibilities are:
 
-- To ask the supervisor agent to check if the data exists in the database and then respond appropriately.
+- To ask the developer team, lead by supervisor, to check if the data exists in the database and then respond appropriately.
 - To inform the user that their query is out of scope if they ask an irrelevant question that is outside your responsibilities.""" 
 
 
@@ -28,7 +28,7 @@ SUPERVISOR_PROMPT = """For give currnet status of the task, what is the next ste
 Respond with single word.
 
 Task Status: {status}
-
+Revision number: {current}/{max}
 """
 
 
@@ -104,3 +104,11 @@ Data:
 {rows}
 
 Task: {task}"""
+
+
+GENERATION_PROMPT = """Base on the context provided by the data team genrate a response to complete the task asked by the user.
+Inforamtion from the data team:
+{evaluation}
+
+Task: {task}
+Respond:"""
