@@ -4,7 +4,7 @@ import uvicorn
 from app.llamaIndex.llamaIndexAgent import ask
 from app.chat_bot import ask_lang
 from app.langchainService.adaptive_RAG import adaptive_agent
-from typing import Optional
+from typing import Optional, List
 
 app = FastAPI(
     title="Assistant-api"
@@ -38,3 +38,9 @@ async def ask_llama(request: userInput):
         chat_history=request.chat_history
     )
     return response
+
+
+@app.post("/summrize")
+async def summarize(docs: List[str]):
+    summery = docs
+    return summery

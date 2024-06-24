@@ -32,7 +32,7 @@ from llama_index.core.objects import (
     SQLTableSchema,
 )
 from sqlalchemy import MetaData
-from app.telementry import instrument
+from app.utils.telementry import instrument
 from app.llamaIndex.eval_query import evaluation
 from app.llamaIndex.llamaIndex_utils import (
     REDMINE_TABLES,
