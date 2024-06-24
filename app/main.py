@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import uvicorn
 from app.llamaIndex.llamaIndexAgent import ask
 from app.chat_bot import ask_lang
-from app.langchainService.adaptive_RAG import adaptive_agent
+from app.langchainService.sql_agent_graph import adaptive_agent
 from typing import Optional, List
 
 app = FastAPI(
