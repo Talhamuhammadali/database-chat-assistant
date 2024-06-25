@@ -68,5 +68,11 @@ def llms_clients_lang(temp: float = 0.3):
     
     return chat_llm
 
+def postgres_connection():
+    connection_string = f'postgresql://{POSTGRES_STT_USER}:{POSTGRES_STT_PASSWORD}@{POSTGRES_STT_HOST}:{POSTGRES_STT_PORT}/{POSTGRES_STT_DATABASE}'
+    print(connection_string)
+    engine = create_engine(connection_string)
+    return engine
 
 check = mysql_connection()
+check_post = postgres_connection()
