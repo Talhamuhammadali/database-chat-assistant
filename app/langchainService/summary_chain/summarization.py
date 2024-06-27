@@ -7,8 +7,7 @@ from app.utils.connections import postgres_connection, llms_clients_lang
 from app.langchainService.summary_chain.summary_utils import urdu_proper_nouns, urdu_adjectives
 from app.langchainService.summary_chain.summary_prompt import (
     CORRECTION_PROMPT,
-    TOPIC_SUMMARIZATION_PROMPT,
-    TRANSLATION_PROMPT
+    TOPIC_SUMMARIZATION_PROMPT
 )
 from typing import List
 
@@ -25,7 +24,7 @@ def get_recent_STT():
         whisper_app_speech_to_text_database
     ORDER BY 
         created_date
-    DESC Limit 5;"""
+    DESC Limit 3;"""
     result = ""
     try:
         with engine.connect() as connection:
@@ -38,12 +37,6 @@ def get_recent_STT():
     result_list.reverse()
     text_to_process = ".".join(result_list)
     return text_to_process
-
-def clean_output():
-    string = """Respond in the following format:
-    Corrected Text:
-    Text goes here"""
-    return 0
 
 def get_correction():
     text_to_process = get_recent_STT()
@@ -58,10 +51,12 @@ def get_correction():
     )
     return corrections
 
-def get_summary(model: str = ""):
+def get_summary(docs: List[str], model: str = ""):
     if model:
         llm = llms_clients_lang(model=model)
-    text_to_process = get_recent_STT()
+    # text_to_process = get_recent_STT()
+    docs.reverse()
+    text_to_process = "\nnext transcript\n".join(docs)
     prompt = PromptTemplate.from_template(TOPIC_SUMMARIZATION_PROMPT)
     topic_summarization_chain = prompt | llm | StrOutputParser()
     topic_summarization = topic_summarization_chain.invoke(
@@ -69,11 +64,5 @@ def get_summary(model: str = ""):
             "urdu": text_to_process
         }
     )
-    trans_prompt = PromptTemplate.from_template(TRANSLATION_PROMPT)
-    trans_chain = trans_prompt | llm | StrOutputParser()
-    translation = trans_chain.invoke(
-        {
-            "urdu": text_to_process
-        }
-    )
+
     return topic_summarization

@@ -24,10 +24,11 @@ Identify Topics:
 Summarize in English:
 
 - For each identified topic, write a concise summary in English.
+- Preferably in multiple line points for each summary.
 - Ensure that the summaries are clear, informative, and capture the essence of the topics.
 - Include the names of individuals, institutions, or products if mentioned.
 - Do not ignore any English text present in the transcript.
-- Preferably include bullet points.
+
 
 Text information:
 - The text is a speech-to-text transcript from videos.
@@ -50,9 +51,3 @@ These are the topics:
 [Summary in English]
 ...
 """
-
-
-TRANSLATION_PROMPT = """Translate the following urdu text:
-{urdu}
-Respond in the following format:
-Translation: [Translation in English]"""
