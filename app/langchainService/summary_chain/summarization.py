@@ -1,3 +1,4 @@
+import requests
 import logging
 from sqlalchemy import text
 from langchain_core.output_parsers.string import StrOutputParser
@@ -9,6 +10,7 @@ from app.langchainService.summary_chain.summary_prompt import (
     CORRECTION_PROMPT,
     TOPIC_SUMMARIZATION_PROMPT
 )
+from app.utils.settings import TRANSLATION_URL
 from typing import List
 
 logging.basicConfig(level="INFO")
@@ -64,5 +66,19 @@ def get_summary(docs: List[str], model: str = ""):
             "urdu": text_to_process
         }
     )
-
-    return topic_summarization
+    payload ={
+        'text': text_to_process
+    }
+    url = TRANSLATION_URL+"/translate"
+    translation = ''
+    try:
+        translation = requests.post(url=url, json=payload)
+        print(translation)
+    except Exception as ex:
+        logger.info(f"Error: {ex}")
+    data = translation.json()
+    
+    return {
+        "topic summaries":  topic_summarization,
+        "urdu translation": data['input_text']
+    }
