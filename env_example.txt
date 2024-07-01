@@ -24,3 +24,10 @@ MYSQL_PORT=3306
 MYSQL_DB="redmine"
 # API keys
 GROQ_API_KEY="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"
+# Translation api url
+TRANSLATION_URL="http://192.168.18.137:8001"
+# Langsmith
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
+LANGCHAIN_PROJECT="pr-topic-summery-dev"
+LANGCHAIN_API_KEY="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"
