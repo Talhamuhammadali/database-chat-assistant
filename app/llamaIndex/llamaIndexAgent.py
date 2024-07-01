@@ -33,7 +33,6 @@ from llama_index.core.objects import (
 )
 from sqlalchemy import MetaData
 from app.utils.telementry import instrument
-from app.llamaIndex.eval_query import evaluation
 from app.llamaIndex.llamaIndex_utils import (
     REDMINE_TABLES,
     EXAMPLES, 
@@ -280,11 +279,6 @@ def ask(query: str):
     # response = strategy_pipeline(
     #     chat_llm=chat_llm,
     #     query=query        
-    # )
-    # hallucination_eval, qa_correctness_eval = evaluation(queries_df=df, llm=chat_llm)
-    # px.Client().log_evaluations(
-    #     SpanEvaluations(eval_name="Hallucination", dataframe=hallucination_eval),
-    #     SpanEvaluations(eval_name="QA Correctness", dataframe=qa_correctness_eval),
     # )
     # logger.info(f"Check traces here:{px.active_session().url}")
     return response
