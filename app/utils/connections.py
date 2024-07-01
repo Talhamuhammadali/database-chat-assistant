@@ -65,7 +65,6 @@ def llms_clients_lang(temp: float = 0.3, model: str = "llama3-70b-8192"):
     #triton_url = "localhost:8001"
     #model_name = "ensemble"
     #chat_llm = TritonTensorRTLLM(server_url=triton_url, model_name=model_name)
-    
     return chat_llm
 
 def postgres_connection():

@@ -1,5 +1,6 @@
 import requests
 import logging
+import time
 from sqlalchemy import text
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain.schema.runnable import RunnableLambda
@@ -67,18 +68,22 @@ def get_summary(docs: List[str], model: str = ""):
         }
     )
     payload ={
-        'text': text_to_process
+        'text': topic_summarization
     }
     url = TRANSLATION_URL+"/translate"
-    translation = ''
+    data = {}
+    start_time = time.time()
     try:
-        translation = requests.post(url=url, json=payload)
-        print(translation)
+        response = requests.post(url=url, json=payload)
+        data = response.json()
     except Exception as ex:
         logger.info(f"Error: {ex}")
-    data = translation.json()
-    
+    end_time = time.time()
+    time_taken = end_time - start_time
+    logger.info(f"Time taken for translation: {time_taken}")
+    logger.info(f"\n\n{data}")
+    transation = data.get("translated_text", "")
     return {
-        "topic summaries":  topic_summarization,
-        "urdu translation": data['input_text']
+        "topic_summaries":  topic_summarization,
+        "urdu_translation": transation
     }
