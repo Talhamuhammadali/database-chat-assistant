@@ -30,6 +30,3 @@ ENV PYTHONPATH=/app
 
 # Expose port for communication
 EXPOSE 8080
-
-# Command to run the FastAPI application using uvicorn
-CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
