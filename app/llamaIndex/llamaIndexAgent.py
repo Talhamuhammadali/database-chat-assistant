@@ -32,7 +32,6 @@ from llama_index.core.objects import (
     SQLTableSchema,
 )
 from sqlalchemy import MetaData
-from app.utils.telementry import instrument
 from app.llamaIndex.llamaIndex_utils import (
     REDMINE_TABLES,
     EXAMPLES, 
@@ -46,7 +45,6 @@ from app.utils.connections import (
     llms_clients_index
 )
 from app.utils.settings import GROQ_API_KEY
-instrument()
 
 logging.basicConfig(level="INFO")
 logger = logging.getLogger("Redmine-Assitant")

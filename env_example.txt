@@ -14,7 +14,6 @@ POSTGRES_STT_PORT="5432"
 SQL_URL=""
 CHAT_URL=""
 # phenoix server ip
-PHOENIX_COLLECTOR_ENDPOINT="http://0.0.0.0:6006"
 # PHOENIX_COLLECTOR_ENDPOINT="http://localhost:6006"
 # MYSQL Credentials
 MYSQL_USER="talha_dev"

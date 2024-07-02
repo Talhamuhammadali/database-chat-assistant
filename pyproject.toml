@@ -36,8 +36,6 @@ pydantic = "^2.7.1"
 python-decouple = "*"
 psycopg2-binary = "^2.9.9"
 chromadb = "*"
-arize-phoenix = "^4.1.1"
-arize-phoenix-evals="^0.9.0"
 
 [build-system]
 requires = ["poetry-core"]
