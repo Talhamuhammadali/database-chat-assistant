@@ -31,3 +31,4 @@ LANGCHAIN_TRACING_V2=true
 LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
 LANGCHAIN_PROJECT="pr-topic-summery-dev"
 LANGCHAIN_API_KEY="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"
+OPENAI_API_KEY =<keyhere>

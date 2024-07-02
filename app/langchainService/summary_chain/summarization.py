@@ -54,9 +54,8 @@ def get_correction():
     )
     return corrections
 
-def get_summary(docs: List[str], model: str = ""):
-    if model:
-        llm = llms_clients_lang(model=model)
+def get_summary(docs: List[str], model: str = "llama3-70b-8192"):
+    llm = llms_clients_lang(model=model)
     # text_to_process = get_recent_STT()
     docs.reverse()
     text_to_process = "\nnext transcript\n".join(docs)
@@ -67,6 +66,7 @@ def get_summary(docs: List[str], model: str = ""):
             "urdu": text_to_process
         }
     )
+    
     payload ={
         'text': topic_summarization
     }
@@ -80,8 +80,10 @@ def get_summary(docs: List[str], model: str = ""):
         logger.info(f"Error: {ex}")
     end_time = time.time()
     time_taken = end_time - start_time
+    
     logger.info(f"Time taken for translation: {time_taken}")
     logger.info(f"\n\n{data}")
+    
     transation = data.get("translated_text", "")
     return {
         "topic_summaries":  topic_summarization,
