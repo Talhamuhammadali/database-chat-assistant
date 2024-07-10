@@ -4,11 +4,9 @@ from app.chat_bot import ask_lang
 from app.langchainService.sql_agent_graph import adaptive_agent
 from app.langchainService.summary_chain.summarization import get_summary
 from app.utils.models import userInput, Docs
-
 app = FastAPI(
     title="Assistant-api"
 )
-
 
     
 @app.get("/")

@@ -3,14 +3,13 @@ import logging
 import time
 from sqlalchemy import text
 from langchain_core.output_parsers.string import StrOutputParser
-from langchain.schema.runnable import RunnableLambda
 from langchain_core.prompts import PromptTemplate
 from app.utils.connections import postgres_connection, llms_clients_lang
 from app.langchainService.summary_chain.summary_utils import urdu_proper_nouns, urdu_adjectives
 from app.langchainService.summary_chain.summary_prompt import (
-    CORRECTION_PROMPT,
-    TOPIC_SUMMARIZATION_PROMPT
+    CORRECTION_PROMPT
 )
+from app.langchainService.summary_chain.chains import get_topic_chain, get_summary_chain
 from app.utils.settings import TRANSLATION_URL
 from typing import List
 
@@ -41,6 +40,21 @@ def get_recent_STT():
     text_to_process = ".".join(result_list)
     return text_to_process
 
+def get_translation(payload: dict):
+    start_time = time.time()
+    url = TRANSLATION_URL+"/translate"
+    data = {}
+    try:
+        response = requests.post(url=url, json=payload)
+        data = response.json()
+    except Exception as ex:
+        logger.info(f"Error: {ex}")
+    end_time = time.time()
+    time_taken = end_time - start_time
+    
+    logger.info(f"Time taken for translation: {time_taken}")
+    logger.info(f"\n\n{data}")
+
 def get_correction():
     text_to_process = get_recent_STT()
     prompt = PromptTemplate.from_template(CORRECTION_PROMPT)
@@ -54,38 +68,33 @@ def get_correction():
     )
     return corrections
 
-def get_summary(docs: List[str], model: str = "llama3-70b-8192"):
+def get_summary(docs: List[str], running_summary: List[str], model: str = "llama3-70b-8192"):
     llm = llms_clients_lang(model=model)
-    # text_to_process = get_recent_STT()
+    min_current = len(docs)
+    min_running = 3 * len(running_summary)
     docs.reverse()
     text_to_process = "\nnext transcript\n".join(docs)
-    prompt = PromptTemplate.from_template(TOPIC_SUMMARIZATION_PROMPT)
-    topic_summarization_chain = prompt | llm | StrOutputParser()
-    topic_summarization = topic_summarization_chain.invoke(
+    previous_summaries = "\n".join(running_summary)
+    topic_summarization_chain = get_topic_chain(llm)
+    topic_summaries = topic_summarization_chain.invoke(
         {
-            "urdu": text_to_process
+            "min_current": min_current,
+            "min_running": min_running,
+            "urdu": text_to_process,
+            "previous_summaries": previous_summaries
         }
     )
-    
-    payload ={
-        'text': topic_summarization
-    }
-    url = TRANSLATION_URL+"/translate"
-    data = {}
-    start_time = time.time()
-    try:
-        response = requests.post(url=url, json=payload)
-        data = response.json()
-    except Exception as ex:
-        logger.info(f"Error: {ex}")
-    end_time = time.time()
-    time_taken = end_time - start_time
-    
-    logger.info(f"Time taken for translation: {time_taken}")
-    logger.info(f"\n\n{data}")
-    
-    transation = data.get("translated_text", "")
+    running_summary_chain = get_summary_chain(llm)
+    currnet_running_summary = running_summary_chain.invoke(
+        {
+         "current_topics": topic_summaries,
+         "previous_summaries": running_summary
+        }
+    )
+    payload = {'text': topic_summaries}
+    translation = get_translation(payload=payload)
     return {
-        "topic_summaries":  topic_summarization,
-        "urdu_translation": transation
+        "topic_summaries":  topic_summaries,
+        "urdu_translation": translation,
+        "running_summary": currnet_running_summary
     }
