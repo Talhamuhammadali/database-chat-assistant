@@ -16,4 +16,4 @@ def get_topic_chain(llm):
 def get_summary_chain(llm):
     running_summary_prompt = PromptTemplate.from_template(RUNNING_SUMMARY_PROMPT)
     running_summary_chain = running_summary_prompt | llm | StrOutputParser()
-    return running_summary_prompt
+    return running_summary_chain

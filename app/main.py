@@ -37,11 +37,11 @@ async def ask_llama(request: userInput):
 
 @app.post("/summarize")
 async def summarize(docs: Docs):
-    summery = get_summary(model="llama3-8b-8192", docs=docs.input)
+    summery = get_summary(model="llama3-8b-8192", docs=docs.input, running_summary= [""])
     return summery
 
 
 @app.post("/summarize-70b")
 async def summarize(docs: Docs):
-    summery = get_summary(model="llama3-70b-8192", docs=docs.input)
+    summery = get_summary(model="llama3-70b-8192", docs=docs.input, running_summary=docs.running_summaries)
     return summery

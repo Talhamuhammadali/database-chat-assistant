@@ -1,6 +1,7 @@
 import requests
 import logging
 import time
+import tiktoken
 from sqlalchemy import text
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.prompts import PromptTemplate
@@ -16,7 +17,7 @@ from typing import List
 logging.basicConfig(level="INFO")
 logger = logging.getLogger(__name__)
 llm = llms_clients_lang(model="llama3-8b-8192")
-
+TOKEN_LIMIT = 256
 
 def get_recent_STT():
     engine = postgres_connection()
@@ -40,20 +41,39 @@ def get_recent_STT():
     text_to_process = ".".join(result_list)
     return text_to_process
 
-def get_translation(payload: dict):
+def get_translation(text: str):
     start_time = time.time()
-    url = TRANSLATION_URL+"/translate"
-    data = {}
-    try:
-        response = requests.post(url=url, json=payload)
-        data = response.json()
-    except Exception as ex:
-        logger.info(f"Error: {ex}")
+    encoder = tiktoken.get_encoding("cl100k_base")
+    tokens = encoder.encode(text)
+    split_index = 0
+    for i in range(len(tokens)):
+        if i > TOKEN_LIMIT and tokens[i] == encoder.encode(".\n\n")[0]:
+            split_index = i
+            break
+    groups = []    
+    if split_index == 0:
+        groups = [text]
+    else:
+        text1 = encoder.decode(tokens[:split_index])
+        text2 = encoder.decode(tokens[split_index:])
+        groups = [text1, text2]
+    urdu_translations = []
+    for text in groups:
+        payload = {'text': text}
+        url = TRANSLATION_URL+"/translate"
+        try:
+            response = requests.post(url=url, json=payload)
+            data = response.json()
+            urdu_translations.append(data.get("translated_text"))
+        except Exception as ex:
+            logger.info(f"Error: {ex}")
     end_time = time.time()
     time_taken = end_time - start_time
     
     logger.info(f"Time taken for translation: {time_taken}")
     logger.info(f"\n\n{data}")
+    urdu_translation = ".\n\n".join(urdu_translations)
+    return urdu_translation
 
 def get_correction():
     text_to_process = get_recent_STT()
@@ -91,8 +111,7 @@ def get_summary(docs: List[str], running_summary: List[str], model: str = "llama
          "previous_summaries": running_summary
         }
     )
-    payload = {'text': topic_summaries}
-    translation = get_translation(payload=payload)
+    translation = get_translation(text=topic_summaries)
     return {
         "topic_summaries":  topic_summaries,
         "urdu_translation": translation,
