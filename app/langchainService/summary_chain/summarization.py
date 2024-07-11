@@ -109,7 +109,7 @@ def get_summary(docs: List[str], running_summary: List[str], model: str = "llama
     currnet_running_summary = running_summary_chain.invoke(
         {
          "current_topics": topic_summaries,
-         "previous_summaries": running_summary
+         "previous_summaries": previous_summaries
         }
     )
     translation = get_translation(text=topic_summaries)
