@@ -17,7 +17,7 @@ from typing import List
 logging.basicConfig(level="INFO")
 logger = logging.getLogger(__name__)
 llm = llms_clients_lang(model="llama3-8b-8192")
-TOKEN_LIMIT = 256
+TOKEN_LIMIT = 150
 
 def get_recent_STT():
     engine = postgres_connection()
@@ -56,6 +56,8 @@ def get_translation(text: str):
     else:
         text1 = encoder.decode(tokens[:split_index])
         text2 = encoder.decode(tokens[split_index:])
+        text2 = text2.replace(".\n\n", "")
+        logger.info(text2)
         groups = [text1, text2]
     urdu_translations = []
     for text in groups:
@@ -72,7 +74,9 @@ def get_translation(text: str):
     
     logger.info(f"Time taken for translation: {time_taken}")
     logger.info(f"\n\n{data}")
-    urdu_translation = ".\n\n".join(urdu_translations)
+    urdu_translation = ". ".join(urdu_translations)
+    logger.info(urdu_translation)
+
     return urdu_translation
 
 def get_correction():
