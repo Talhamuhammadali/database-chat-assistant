@@ -41,7 +41,7 @@ async def summarize(docs: Docs):
     return summery
 
 
-@app.post("/summarize-70b")
+@app.post("/summarize-70b/")
 async def summarize(docs: Docs):
     summery = get_summary(model="llama3-70b-8192", docs=docs.input, running_summary=docs.running_summaries)
     return summery
