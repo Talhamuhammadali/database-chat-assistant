@@ -42,7 +42,9 @@ Continuity Information:
 The ongoing English summary provides context and topics extracted from the previous {min_running} minutes of the transcript.
 Use this previous summary to ensure continuity and coherence in the topic generation.
 
-Respond in follwoing format:
+Strictly, respond in following format:
+[Response Format]
+---
 These are the topics:
 
 [Topic Name]
@@ -51,6 +53,8 @@ These are the topics:
 [Summary in English]
 [Topic Name]
 [Summary in English]
+---
+[Response Format END]
 
 Text for current {min_current} minutes in Urdu:
 {urdu}
@@ -76,31 +80,30 @@ Running Summary Creation:
 
     3. Summarize in English:
 
-        - For each identified topic, write a concise running summary in English.
+        - For each identified topic, write a concise single line running summary in English.
         - Indicate if the topic is a continuation from previous summaries, a new topic, or incomplete and to be continued.
         - Ensure the summaries are clear, informative, and capture the essence of each topic.
-        - Include the names of individuals, institutions, or products if mentioned.
-
+        
 Continuity Information:
 
     - The ongoing English summary provides context and topics extracted from the previous 9 minutes of the transcript.
     - Use this previous summary to ensure continuity and coherence in the running summary.
 
-Format your response as follows: 
+Strictly, format your response as follows: 
+[Response Format]
+---
 Running Summary:
 
 [Topic Name] (Continuation/New/Incomplete)
-- [Summary in English]
-- [Additional point if needed]
+- [Single line Summary in English]
 
 [Topic Name] (Continuation/New/Incomplete)
-- [Summary in English]
-- [Additional point if needed]
+- [Single line Summary in English]
 
 [Topic Name] (Continuation/New/Incomplete)
-- [Summary in English]
-- [Additional point if needed]
-...
+- [Single line Summary in English]
+---
+[Response Format END]
 
 Current Topics:
 {current_topics}
