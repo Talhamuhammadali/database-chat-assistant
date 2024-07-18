@@ -51,7 +51,6 @@ def assistant_node(state: TaskState):
     prompt = ASSISTANT_PROMPT.format(question=state["task"])
     system = SystemMessage(content=ASSISTANT_SYSTEM_PROMPT)
     user = HumanMessage(content=prompt)
-    print(state["messages"])
     messages = [system, user]
     response = llm.invoke(messages)
     return {
@@ -128,6 +127,7 @@ def sql_node(state: TaskState):
         if sql_result_start != -1:
             sql = sql[:sql_result_start]
             sql = sql.replace("```", "").strip()
+    sql = sql.replace("SQLQUERY:","").strip()
             
     return {
         "sql_query": sql
@@ -225,14 +225,14 @@ def adaptive_agent(user_question: str, chat_history: list):
     for event in graph.stream(
              {
             "task": user_question,
-            "max_revisions": 1,
+            "max_revisions": 2,
             "revision_number": 0
         }, 
         thread_config
     ):
         response = event
         for v in event.values():
-            print(v['messages'])
+            print(v)
     return response
     # return {"question": response['task'], "assistant": response["final_response"]}
    

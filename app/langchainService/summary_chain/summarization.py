@@ -108,9 +108,7 @@ def get_summary(docs: List[str], running_summary: List[str], model: str = "llama
     running_summary_chain = get_summary_chain(llm)
     currnet_running_summary = running_summary_chain.invoke(
         {
-         "current_topics": topic_summaries,
-         "previous_summaries": previous_summaries
-        }
+         "current_topics": topic_summaries        }
     )
     translation = get_translation(text=topic_summaries)
     return {

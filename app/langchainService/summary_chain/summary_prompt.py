@@ -61,24 +61,20 @@ Text for current {min_current} minutes in Urdu:
 
 Previous summaries in English:
 {previous_summaries}
-"""
+
+These are the topics:"""
 
 RUNNING_SUMMARY_PROMPT = """You are provided with topics identified from a 3-minute transcribed Urdu text, along with ongoing summaries in English that cover the last 9 minutes. Your task is to create a running summary in English that maintains continuity with the previous summaries. This will help reduce token count while keeping the topic context intact and clear.
 
 Running Summary Creation:
 
-    1. Review Previous Summaries:
-
-        - Understand the topics and context from the previous 9 minutes of summarized content.
-        - Identify which topics are ongoing, new, or concluded.
-
-    2. Analyze Current Topics:
+    1. Analyze Current Topics:
 
         - Review the provided topics identified from the current 3-minute transcribed text.
         - Note any continuation of topics from the previous summaries.
         - Identify new topics introduced in the current text.
 
-    3. Summarize in English:
+    2. Summarize in English:
 
         - For each identified topic, write a concise single line running summary in English.
         - Indicate if the topic is a continuation from previous summaries, a new topic, or incomplete and to be continued.
@@ -86,7 +82,7 @@ Running Summary Creation:
         
 Continuity Information:
 
-    - The ongoing English summary provides context and topics extracted from the previous 9 minutes of the transcript.
+    - The ongoing English summary provides context and topics extracted.
     - Use this previous summary to ensure continuity and coherence in the running summary.
 
 Strictly, format your response as follows: 
@@ -108,6 +104,4 @@ Running Summary:
 Current Topics:
 {current_topics}
 
-Previous summaries in English:
-{previous_summaries}
-"""
+Running Summary:"""
