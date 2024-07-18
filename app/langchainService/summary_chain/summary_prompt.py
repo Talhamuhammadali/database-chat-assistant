@@ -47,11 +47,11 @@ Strictly, respond in following format:
 ---
 These are the topics:
 
-[Topic Name]
+**[Topic Name]**
 [Summary in English]
-[Topic Name]
+**[Topic Name]**
 [Summary in English]
-[Topic Name]
+**[Topic Name]**
 [Summary in English]
 ---
 [Response Format END]
@@ -90,13 +90,13 @@ Strictly, format your response as follows:
 ---
 Running Summary:
 
-[Topic Name] (Continuation/New/Incomplete)
+**[Topic Name]** (Continuation/New/Incomplete)
 - [Single line Summary in English]
 
-[Topic Name] (Continuation/New/Incomplete)
+**[Topic Name]** (Continuation/New/Incomplete)
 - [Single line Summary in English]
 
-[Topic Name] (Continuation/New/Incomplete)
+**[Topic Name]** (Continuation/New/Incomplete)
 - [Single line Summary in English]
 ---
 [Response Format END]
