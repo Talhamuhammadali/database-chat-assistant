@@ -1,3 +1,24 @@
+import re
+from app.langchainService.summary_chain.models import Topics
+
+class TopicsOutputParser():
+    def parse(self, text: str) -> str:
+        match = re.search(r'\[Response Format START\](.*)\[Response Format END\]', text, re.DOTALL)
+        
+        if not match:
+            raise ValueError("Failed to find the response format delimiters in the text")
+        content = match.group(1).strip()
+
+        topic_summarize = []
+        topics = re.split(r'\*\*(.*?)\*\*', content)
+
+        for i in range(1, len(topics), 2):
+            topic = topics[i].strip()
+            summary = topics[i + 1].strip()
+            topic_summarize.append({"topic": topic, "summary": summary})
+        topics  = Topics(topic_summaries=topic_summarize)
+        return topics
+    
 urdu_proper_nouns = [
     "پاکستان",    # Pakistan
     "اسلام آباد",  # Islamabad
@@ -110,4 +131,3 @@ urdu_adjectives = [
     "مخلص",       # Sincere
     "غیر مخلص"    # Insincere
 ]
-

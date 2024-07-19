@@ -3,7 +3,7 @@ from app.llamaIndex.llamaIndexAgent import ask
 from app.chat_bot import ask_lang
 from app.langchainService.sql_agent_graph import adaptive_agent
 from app.langchainService.summary_chain.summarization import get_summary
-from app.utils.models import userInput, Docs
+from app.utils.models import userInput, Docs, summaryResponse
 app = FastAPI(
     title="Assistant-api"
 )
@@ -41,7 +41,10 @@ async def summarize(docs: Docs):
     return summery
 
 
-@app.post("/summarize-70b/")
+@app.post(
+    "/summarize-70b/",
+    response_model=summaryResponse
+)
 async def summarize(docs: Docs):
     summery = get_summary(model="llama3-70b-8192", docs=docs.input, running_summary=docs.running_summaries)
     return summery

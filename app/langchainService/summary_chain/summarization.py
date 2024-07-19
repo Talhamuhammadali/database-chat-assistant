@@ -6,7 +6,12 @@ from sqlalchemy import text
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from app.utils.connections import postgres_connection, llms_clients_lang
-from app.langchainService.summary_chain.summary_utils import urdu_proper_nouns, urdu_adjectives
+from app.langchainService.summary_chain.summary_utils import (
+    urdu_proper_nouns,
+    urdu_adjectives,
+    TopicsOutputParser
+)
+
 from app.langchainService.summary_chain.summary_prompt import (
     CORRECTION_PROMPT
 )
@@ -89,6 +94,7 @@ def get_correction():
     )
     return corrections
 
+
 def get_summary(docs: List[str], running_summary: List[str], model: str = "llama3-70b-8192"):
     llm = llms_clients_lang(model=model)
     min_current = len(docs)
@@ -96,7 +102,9 @@ def get_summary(docs: List[str], running_summary: List[str], model: str = "llama
     docs.reverse()
     text_to_process = "\nnext transcript\n".join(docs)
     previous_summaries = "\n".join(running_summary)
+    previous_summaries = ""
     topic_summarization_chain = get_topic_chain(llm)
+    parser = TopicsOutputParser()
     topic_summaries = topic_summarization_chain.invoke(
         {
             "min_current": min_current,
@@ -105,14 +113,25 @@ def get_summary(docs: List[str], running_summary: List[str], model: str = "llama
             "previous_summaries": previous_summaries
         }
     )
+    structured_topics = parser.parse(text=topic_summaries)
     running_summary_chain = get_summary_chain(llm)
     currnet_running_summary = running_summary_chain.invoke(
         {
          "current_topics": topic_summaries        }
     )
-    translation = get_translation(text=topic_summaries)
+    urdu_summaries = []
+    logger.info(f"{type(structured_topics.topic_summaries)}")
+    for topic_summary in structured_topics.topic_summaries:
+        # logger.info(topic_summary)
+
+        urdu = {
+            "topic": get_translation(text=topic_summary["topic"]),
+            "summary": get_translation(text=topic_summary["summary"])
+        }
+        urdu_summaries.append(urdu)
+
     return {
-        "topic_summaries":  topic_summaries,
-        "urdu_translation": translation,
+        "topic_summaries":  structured_topics.topic_summaries,
+        "urdu_translation": urdu_summaries,
         "running_summary": currnet_running_summary
     }

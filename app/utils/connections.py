@@ -55,7 +55,7 @@ def llms_clients_index(temp: float = 0.3):
     
     return chat_llm, embediing_model
 
-def llms_clients_lang(temp: float = 0.3, model: str = "llama3-70b-8192"):
+def llms_clients_lang(temp: float = 0.1, model: str = "llama3-70b-8192"):
     
     api_key=GROQ_API_KEY
     chat_llm = ChatGroq(model=model,

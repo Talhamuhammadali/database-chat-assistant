@@ -14,7 +14,7 @@ Text goes here ...
 """
 
 
-TOPIC_SUMMARIZATION_PROMPT = """You are provided with a {min_current}-minute transcribed Urdu text from TV channels and ongoing summaries in English that cover the last {min_running} minutes. 
+TOPIC_SUMMARIZATION_PROMPT = """You are provided with a {min_current}-minute transcribed Urdu text from TV channels and sometimes ongoing summaries in English that cover the last {min_running} minutes. 
 This is done to ensure continuity in topic generation, especially for longer segments such as a 15-minute ongoing speech. Your tasks are as follows:
 
 Identify Topics:
@@ -39,12 +39,10 @@ Text information:
 
 Continuity Information:
 
-The ongoing English summary provides context and topics extracted from the previous {min_running} minutes of the transcript.
-Use this previous summary to ensure continuity and coherence in the topic generation.
+If available, use this previous summary to ensure continuity and coherence in the topic generation.
 
 Strictly, respond in following format:
-[Response Format]
----
+[Response Format START]
 These are the topics:
 
 **[Topic Name]**
@@ -53,7 +51,6 @@ These are the topics:
 [Summary in English]
 **[Topic Name]**
 [Summary in English]
----
 [Response Format END]
 
 Text for current {min_current} minutes in Urdu:
@@ -64,7 +61,7 @@ Previous summaries in English:
 
 These are the topics:"""
 
-RUNNING_SUMMARY_PROMPT = """You are provided with topics identified from a 3-minute transcribed Urdu text, along with ongoing summaries in English that cover the last 9 minutes. Your task is to create a running summary in English that maintains continuity with the previous summaries. This will help reduce token count while keeping the topic context intact and clear.
+RUNNING_SUMMARY_PROMPT = """You are provided with topics identified from a 3-minute transcribed Urdu text. Your task is to create a running summary in English that maintains continuity with the previous summaries. 
 
 Running Summary Creation:
 
@@ -77,17 +74,15 @@ Running Summary Creation:
     2. Summarize in English:
 
         - For each identified topic, write a concise single line running summary in English.
-        - Indicate if the topic is a continuation from previous summaries, a new topic, or incomplete and to be continued.
+        - Indicate if the topic is a continuation from previous summaries incomplete and to be continued.
         - Ensure the summaries are clear, informative, and capture the essence of each topic.
         
 Continuity Information:
 
-    - The ongoing English summary provides context and topics extracted.
-    - Use this previous summary to ensure continuity and coherence in the running summary.
+    - Ensure continuity and coherence in the running summary.
 
 Strictly, format your response as follows: 
-[Response Format]
----
+[Response Format START]
 Running Summary:
 
 **[Topic Name]** (Continuation/New/Incomplete)
@@ -98,7 +93,6 @@ Running Summary:
 
 **[Topic Name]** (Continuation/New/Incomplete)
 - [Single line Summary in English]
----
 [Response Format END]
 
 Current Topics:

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 class Docs(BaseModel):
     input: List[str]
@@ -8,3 +8,6 @@ class Docs(BaseModel):
 class userInput(BaseModel):
     question: str
     chat_history: Optional[list]
+
+class summaryResponse(BaseModel):
+    response: List[Dict[str, str]]
