@@ -77,7 +77,6 @@ def get_translation(text: str):
     time_taken = end_time - start_time
     
     logger.info(f"Time taken for translation: {time_taken}")
-    logger.info(f"\n\n{data}")
     urdu_translation = ". ".join(urdu_translations)
     return urdu_translation
 
@@ -120,10 +119,7 @@ def get_summary(docs: List[str], running_summary: List[str], model: str = "llama
          "current_topics": topic_summaries        }
     )
     urdu_summaries = []
-    logger.info(f"{type(structured_topics.topic_summaries)}")
     for topic_summary in structured_topics.topic_summaries:
-        # logger.info(topic_summary)
-
         urdu = {
             "topic": get_translation(text=topic_summary["topic"]),
             "summary": get_translation(text=topic_summary["summary"])
