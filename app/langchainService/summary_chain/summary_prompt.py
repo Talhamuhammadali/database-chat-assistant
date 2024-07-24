@@ -59,7 +59,6 @@ Text for current {min_current} minutes in Urdu:
 Previous summaries in English:
 {previous_summaries}
 
-[Response Format START]
 These are the topics:"""
 
 RUNNING_SUMMARY_PROMPT = """You are provided with topics identified from a 3-minute transcribed Urdu text. Your task is to create a running summary in English that maintains continuity with the previous summaries. 
@@ -99,5 +98,4 @@ Running Summary:
 Current Topics:
 {current_topics}
 
-[Response Format START]
 Running Summary:"""

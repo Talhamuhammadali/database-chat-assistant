@@ -4,9 +4,11 @@ from app.langchainService.summary_chain.models import Topics
 class TopicsOutputParser():
     def parse(self, text: str) -> str:
         match = re.search(r'\[Response Format START\](.*)\[Response Format END\]', text, re.DOTALL)
-        
-        if not match:
+        match1 = re.search(r'These are the topics:(.*)\[Response Format END\]', text, re.DOTALL)
+        if not match1 and not match:
             raise ValueError("Failed to find the response format delimiters in the text")
+        if not match:
+            match = match1
         content = match.group(1).strip()
 
         topic_summarize = []
