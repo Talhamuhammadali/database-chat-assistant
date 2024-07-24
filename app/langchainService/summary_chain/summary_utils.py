@@ -3,12 +3,18 @@ from app.langchainService.summary_chain.models import Topics
 
 class TopicsOutputParser():
     def parse(self, text: str) -> str:
-        match = re.search(r'\[Response Format START\](.*)\[Response Format END\]', text, re.DOTALL)
-        match1 = re.search(r'These are the topics:(.*)\[Response Format END\]', text, re.DOTALL)
-        if not match1 and not match:
-            raise ValueError("Failed to find the response format delimiters in the text")
+        possible_matches = [
+            r'\[Response Format START\](.*)\[Response Format END\]',
+            r'These are the topics:(.*)\[Response Format END\]',
+            r'These are the topics:(.*)'
+        ]
+        for pattern in possible_matches:
+            match = re.search(pattern, text, re.DOTALL)
+            if match:
+                break
+        
         if not match:
-            match = match1
+            raise ValueError("Failed to find the response format delimiters in the text")
         content = match.group(1).strip()
 
         topic_summarize = []

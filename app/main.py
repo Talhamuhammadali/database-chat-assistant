@@ -46,6 +46,6 @@ async def summarize(docs: Docs):
     response_model=summaryResponse
 )
 async def summarize(docs: Docs):
-    summary = get_summary(model="llama-3.1-70b-versatile", docs=docs.input, running_summary=docs.running_summaries)
+    summary = get_summary(model="llama3-70b-8192", docs=docs.input, running_summary=docs.running_summaries)
     response = summaryResponse(response=summary)
     return response
