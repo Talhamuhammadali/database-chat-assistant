@@ -48,13 +48,14 @@ from app.utils.settings import GROQ_API_KEY
 
 logging.basicConfig(level="INFO")
 logger = logging.getLogger("Redmine-Assitant")
-logger.setLevel(logging.INFO)
-
-engine = mysql_connection()
-metadata_obj = MetaData()
-sql_database = SQLDatabase(engine)
-tables = [*REDMINE_TABLES.keys()]
-metadata_obj.reflect(bind=engine, only=tables)
+try:
+    engine = mysql_connection()
+    metadata_obj = MetaData()
+    sql_database = SQLDatabase(engine)
+    tables = [*REDMINE_TABLES.keys()]
+    metadata_obj.reflect(bind=engine, only=tables)
+except:
+    logger.info("Invalid MySQL db")
 
 def llms_clients():
     logger.info("Initializing LLM and Embedings")

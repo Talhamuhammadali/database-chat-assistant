@@ -21,7 +21,7 @@ async def ask_llama(request: userInput):
 
 
 @app.post("/ask/lang")
-async def ask_llama(request: userInput):
+async def ask_lang_agent(request: userInput):
     response = ask_lang(query=request.question)
     return response["output"]
 

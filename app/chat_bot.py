@@ -30,7 +30,7 @@ def agent_test(user_question: str):
         args_schema=GetInfo
     )
     tools_list = [get_context]
-    print(tools_list)
+    logger.info(tools_list)
     tool_names = ["get_context"]
     prompt = PromptTemplate.from_template(SYSTEM_PROMPT)
 
