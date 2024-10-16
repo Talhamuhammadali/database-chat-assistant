@@ -69,14 +69,14 @@ This project implements a chat bot using LangChain and LlamaIndex, with a FastAP
 
 ### Using Poetry
 
-1. Install dependencies:
-   ```
-   poetry install
-   ```
-
-2. If you've added new dependencies or updated existing ones, update the lock file:
+1. If you've added new dependencies or updated existing ones, update the lock file:
    ```
    poetry lock
+   ```
+
+2. Install dependencies:
+   ```
+   poetry install
    ```
 
 4. Run the FastAPI application:
